@@ -116,7 +116,7 @@ jobs:
             docker login -u kubedrona -p ${{ env.docker_pass }}
             echo Pushing bundle "$*"
             echo $@
-            imgpkg push -f . -i docker.io/coredgeio/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
+            imgpkg push -f . -i docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
             echo Done
             EOF
             
@@ -124,4 +124,4 @@ jobs:
             echo "**************"
             pwd
             echo "*************"
-            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/coredgeio/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
+            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
