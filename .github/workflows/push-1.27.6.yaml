@@ -1,0 +1,127 @@
+name: push deb
+env:
+  VERSION: "1.27.6"
+  apt-version: "1.27"
+on: [ workflow_dispatch ]
+jobs:
+  script:
+    #runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      # - ckp
+      #- '108'
+    name: clone and create deb
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+           repository: 'vmware-tanzu/cluster-api-provider-bringyourownhost'
+           ref: 'main'
+      - name: Downloading other required packages
+        run: | 
+            cd installer/bundle_builder/ingredients/deb/
+            rm -rf Dockerfile
+            rm -rf download.sh
+            touch download.sh
+            cat <<EOF > download.sh
+            #!/bin/bash
+            set -e
+            echo  Update the apt package index and install packages needed to use the Kubernetes apt repository
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl
+            echo Download containerd
+            curl -LOJR https://github.com/containerd/containerd/releases/download/v1.6.18/cri-containerd-cni-1.6.18-linux-amd64.tar.gz
+            echo Download the Google Cloud public signing key
+            sudo apt-get install gpg -y
+            # sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
+            sudo apt-get update
+            sudo apt-get install wget -y 
+            echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${{env.apt-version}}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+            #sudo curl -fsSLo /etc/apt/keyrings/kubernetes-apt-keyring.gpg  https://pkgs.k8s.io/core:/stable:/v${{env.apt-version}}/deb/Release.key
+            
+            sudo mkdir -p /etc/apt/keyrings
+            curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+            # sudo touch /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+            echo Update apt package index, install kubelet, kubeadm and kubectl
+            sudo apt-get update
+            sudo apt-get download kubernetes-cni:$ARCH=1.2.0-2.1
+            sudo apt-get download cri-tools:$ARCH=1.27.1-1.1
+            EOF
+            
+            touch Dockerfile
+            cat <<EOF > Dockerfile
+            FROM ubuntu:20.04 as build
+            ENV CONTAINERD_VERSION=1.6.18
+            ENV KUBERNETES_VERSION=${{env.VERSION}}-00
+            ENV ARCH=amd64
+            RUN apt-get update \
+                && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo
+            WORKDIR /bundle-builder
+            COPY download.sh .
+            RUN chmod a+x download.sh
+            WORKDIR /ingredients
+            ENTRYPOINT ["/bundle-builder/download.sh"]
+            EOF
+
+            docker build -t byoh-ingredients-deb .
+            mkdir -p byoh-ingredients-download
+            chmod 777 byoh-ingredients-download
+            docker run --rm -v `pwd`/byoh-ingredients-download:/ingredients byoh-ingredients-deb
+      - name: Moving custom deb packages
+        shell: bash
+        run: |
+            pwd
+            cd installer/bundle_builder/ingredients/deb/byoh-ingredients-download/
+            rm -rf kubelet_${{env.VERSION}}-00_amd64.deb kubeadm_${{env.VERSION}}-00_amd64.deb kubectl_${{env.VERSION}}-00_amd64.deb
+            cp /tmp/ckp-deb/kubelet_${{env.VERSION}}-00_amd64.deb .
+            cp /tmp/ckp-deb/kubeadm_${{env.VERSION}}-00_amd64.deb .
+            cp /tmp/ckp-deb/kubectl_${{env.VERSION}}-00_amd64.deb .
+      - name: Pushing bundles
+        shell: bash
+        env: 
+           docker_pass: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+            pwd
+            cd installer/bundle_builder
+            rm -rf push-bundle.sh
+            rm -rf Dockerfile
+            cat <<EOF > Dockerfile
+            FROM ubuntu:20.04
+            ENV BUILD_ONLY=1
+            WORKDIR /bundle-builder
+            COPY *.sh ./
+            RUN apt-get update
+            RUN apt  install -y curl docker.io
+            RUN chmod a+x *.sh
+            COPY config/ubuntu/20_04/k8s/1_22 /config/
+            RUN mkdir /ingredients && mkdir /bundle
+            ENV PATH="/bundle-builder:${PATH}"
+            WORKDIR /tmp/bundle
+            ENTRYPOINT ["build-push-bundle.sh", "/ingredients", "/config"]
+            EOF
+            
+            cat <<EOF > push-bundle.sh
+            #!/bin/bash
+            set -e
+            # apt update
+            # apt-get install wget
+            # wget https://github.com/carvel-dev/imgpkg/releases/download/v0.39.0/imgpkg-linux-amd64
+            # chmod +x imgpkg-linux-amd64
+            # mv imgpkg-linux-amd64 /usr/bin/imgpkg
+            mkdir local-bin/
+            curl -L https://carvel.dev/install.sh | K14SIO_INSTALL_BIN_DIR=local-bin bash
+            export PATH=$PWD/local-bin/:$PATH
+            cp local-bin/* /usr/bin/
+            docker login -u kubedrona -p ${{ env.docker_pass }}
+            echo Pushing bundle "$*"
+            echo $@
+            imgpkg push -f . -i docker.io/coredgeio/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
+            echo Done
+            EOF
+            
+            docker build -t byoh-build-push-bundle .
+            echo "**************"
+            pwd
+            echo "*************"
+            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/coredgeio/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
