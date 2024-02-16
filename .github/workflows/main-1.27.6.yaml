@@ -1,0 +1,219 @@
+# CREATING SIGN BINARIES OF KUBEADM/KUBELET
+# Signing the docker images of core-components
+# Creating and verifyiong deb packages of kubeadm kubelet
+#1.26.10 - b8609d4dd75c5d6fba4a5eaa63a5507cb39a6e99
+#1.27.6 - 741c8db18a52787d734cbe4795f0b4ad860906d6
+#1.28.3 - a8a1abc25cad87333840cd7d54be2efaf31a3177
+#1.29.0 - 3f7a50f38688eb332e2a1b013678c6435d539ae6
+# It was finished successfully
+name: final_ci
+env:
+  VERSION: "1.27.6"
+  RELEASE-VERSION: "release-1.27"
+on: [ workflow_dispatch ]
+jobs:
+  script:
+    #runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      # - ckp
+      #- '108'
+    name: clone and create deb
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+           repository: 'coredgeio/ckp'
+           ref: '741c8db18a52787d734cbe4795f0b4ad860906d6'
+           token: ${{ secrets.GH_PAT }}
+      - name: Installing make
+        run: sudo apt install make dpkg -y
+
+      - name: exporting env's and building deb's
+        run:  |
+           rm -rf /tmp/ckp-deb/*
+           export KUBE_GIT_MAJOR=1
+           export KUBE_GIT_COMMIT='741c8db18a52787d734cbe4795f0b4ad860906d6'
+           export KUBE_GIT_MINOR='27+'
+           export KUBE_GIT_VERSION='v${{ env.VERSION }}-ckp'
+           export KUBE_GIT_TREE_STATE='clean'
+           echo v${{ env.VERSION }}-ckp
+           # mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/usr/bin 
+           # echo kubeadm_${{ env.VERSION }}-00_amd64
+           make quick-release
+           ./_output/dockerized/bin/linux/amd64/kubeadm version
+           git clone https://github.com/Avnshrai/ckp-deb.git
+           chmod 777 ckp-deb/*
+           mv ckp-deb/* .
+            
+      - name: signing the binaries
+        shell: bash
+        run: | 
+          # GPG_TTY=$(tty)
+          # export GPG_TTY
+          gpg --list-keys --no-tty
+          gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
+          gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
+          #added here
+          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-apiserver
+          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
+          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
+          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
+      
+      - name: Making Kubeadm Deb packages
+        shell: bash
+        run: |
+           mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/usr/bin 
+           mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d
+           echo kubeadm_${{ env.VERSION }}-00_amd64
+           mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN
+           cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ env.VERSION }}-00_amd64/usr/bin/.
+           chmod +x kubeadm_${{ env.VERSION }}-00_amd64/usr/bin/*
+           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/control 
+           cat <<EOF > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           Package: kubeadm
+           Version: ${{ env.VERSION }}-ckp
+           Maintainer: Coredge.io 
+           Depends: libc6
+           Architecture: amd64
+           Description: kubeadmckp binary installation 
+           EOF
+           
+           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/conffiles
+           cat <<EOF > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/conffiles
+           /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           EOF
+
+           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums 
+           cat <<EOF > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           5aa23a287f43df95ceac1e24c62612c0  usr/bin/kubeadm
+           EOF
+           
+           touch kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
+           cat kubeadm/10-kubeadm.conf > kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           chmod 644 kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           cat kubeadm/postinst > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           chmod 775 kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           dpkg --build kubeadm_${{ env.VERSION }}-00_amd64
+      
+      - name: Making Kubelet Deb packages
+        shell: bash
+        run: |
+           mkdir -p kubelet_${{ env.VERSION }}-00_amd64/usr/bin
+           mkdir -p kubelet_${{ env.VERSION }}-00_amd64/DEBIAN
+           mkdir -p kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system
+           cp _output/dockerized/bin/linux/amd64/kubelet kubelet_${{ env.VERSION }}-00_amd64/usr/bin/.
+           chmod +x  kubelet_${{ env.VERSION }}-00_amd64/usr/bin/*
+           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/control 
+           cat <<EOF > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           Package: kubelet 
+           Version: ${{ env.VERSION }}-ckp
+           Maintainer: Coredge.io 
+           Depends: libc6
+           Architecture: amd64
+           Description: kubeletckp binary installation 
+           EOF
+
+           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           cat <<EOF> kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           dd8da554cf86fbd4937fea9d4459a2e2  lib/systemd/system/kubelet.service
+           a1cdefcbbd6b3da2b6fdfee266b5ba1d  usr/bin/kubelet
+           EOF
+           touch kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           touch kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/rules
+           cat kubelet/kubelet.service > kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           chmod 664 kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           cat kubelet/rules > kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/rules
+           chmod 664 kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/rules
+           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postrm
+           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/prerm
+           cat kubelet/postinst > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           chmod 775 kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           cat kubelet/postrm > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postrm
+           chmod 775 kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postrm
+           cat kubelet/prerm > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/prerm
+           chmod 775 kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/prerm
+           dpkg --build kubelet_${{ env.VERSION }}-00_amd64
+           
+      - name: creating kubectl deb package
+        shell: bash
+        run: |
+           mkdir -p kubectl_${{ env.VERSION }}-00_amd64/usr/bin 
+           mkdir -p kubectl_${{ env.VERSION }}-00_amd64/DEBIAN
+           touch kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           touch kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           touch kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           cat <<EOF> kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           Package: kubectl
+           Version: ${{ env.VERSION }}-ckp
+           Architecture: amd64
+           Maintainer: Kubernetes Authors <kubernetes-dev+release@googlegroups.com>
+           Installed-Size: 47585
+           Section: misc
+           Priority: optional
+           Homepage: https://kubernetes.io
+           Description: Kubernetes Command Line Tool
+           EOF
+           
+           cat kubectl/md5sums > kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           cat kubectl/postinst > kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           chmod 775 kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
+           cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ env.VERSION }}-00_amd64/usr/bin/kubectl
+           dpkg --build kubectl_${{ env.VERSION }}-00_amd64
+
+      - name: signing deb packages
+        shell: bash
+        run: |
+          sudo apt-get install dpkg-sig
+          #GPG_TTY=$(tty)
+          #export GPG_TTY
+          dpkg-sig -k coredgeio --sign builder kubeadm_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder kubelet_${{ env.VERSION }}-00_amd64.deb 
+          dpkg-sig --verify kubeadm_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb 
+          
+          #gpg -u A36B28D6A8E0FADA0FA759491FD5C19F325EE055 -b kubeadm_${{ env.VERSION }}-00_amd64.deb 
+          #gpg -u A36B28D6A8E0FADA0FA759491FD5C19F325EE055 -b kubelet_${{ env.VERSION }}-00_amd64.deb 
+          #gpg --verify kubeadm_${{ env.VERSION }}-00_amd64.deb.sig kubeadm_${{ env.VERSION }}-00_amd64.deb 
+          #gpg --verify kubelet_${{ env.VERSION }}-00_amd64.deb.sig kubelet_${{ env.VERSION }}-00_amd64.deb
+          mkdir -p /tmp/ckp-deb
+          cp kubeadm_${{ env.VERSION }}-00_amd64.deb /tmp/ckp-deb
+          cp kubelet_${{ env.VERSION }}-00_amd64.deb /tmp/ckp-deb
+          cp kubectl_${{ env.VERSION }}-00_amd64.deb /tmp/ckp-deb
+      
+      - name: pushing images to dockerhub
+        shell: bash
+        env: 
+           docker_pass: ${{secrets.DOCKER_PASSWORD}}
+           DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE}}
+           image_version: v${{ env.VERSION }}-ckp
+           docker_image_version: v${{ env.VERSION }}-rc1
+        run: |
+          docker login -u kubedrona -p $docker_pass
+          cd _output/release-images/amd64
+          docker load -i kube-scheduler.tar
+          docker load -i kube-proxy.tar
+          docker load -i kube-controller-manager.tar
+          docker load -i kube-apiserver.tar
+
+          docker tag registry.k8s.io/kube-apiserver-amd64:$image_version coredgeio/kube-apiserver:$docker_image_version
+          docker tag registry.k8s.io/kube-proxy-amd64:$image_version coredgeio/kube-proxy:$docker_image_version
+          docker tag registry.k8s.io/kube-scheduler-amd64:$image_version coredgeio/kube-scheduler:$docker_image_version
+          docker tag registry.k8s.io/kube-controller-manager-amd64:$image_version coredgeio/kube-controller-manager:$docker_image_version
+          
+          export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE
+          docker push coredgeio/kube-apiserver:$docker_image_version
+          docker push coredgeio/kube-proxy:$docker_image_version
+          docker push coredgeio/kube-scheduler:$docker_image_version
+          docker push coredgeio/kube-controller-manager:$docker_image_version 
+    
+
+      # - name: upload_artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with: 
+      #     name: debpackage
+      #     path: |
+      #       kubeadm_${{ env.VERSION }}-00_amd64.deb
+      #       kubelet_${{ env.VERSION }}-00_amd64.deb
