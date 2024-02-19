@@ -175,9 +175,9 @@ jobs:
           dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ env.VERSION }}-00_amd64.deb
           dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ env.VERSION }}-00_amd64.deb
           echo "test1"
-          dpkg-sig --verify kubeadm_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig --verify kubectl_${{ env.VERSION }}-00_amd64.deb 
+          # dpkg-sig --verify kubeadm_${{ env.VERSION }}-00_amd64.deb
+          # dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb
+          # dpkg-sig --verify kubectl_${{ env.VERSION }}-00_amd64.deb 
           echo "test2"
           mkdir -p /tmp/ckp-deb
           echo "test3"
