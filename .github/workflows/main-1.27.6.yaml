@@ -167,12 +167,13 @@ jobs:
       - name: signing deb packages
         shell: bash
         run: |
+          echo "hello1"
           GPG_TTY=$(tty)
+          echo "hello2"
           export GPG_TTY
-          # dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubeadm_${{ env.VERSION }}-00_amd64.deb
-          # dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubelet_${{ env.VERSION }}-00_amd64.deb 
-          # dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubectl_${{ env.VERSION }}-00_amd64.deb
+          echo "hello3"
           ar d "kubeadm_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
+          echo "hello4"
           ar d "kubelet_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
           ar d "kubectl_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
           dpkg-sig -k coredgeio --sign builder kubeadm_${{ env.VERSION }}-00_amd64.deb
