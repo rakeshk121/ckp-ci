@@ -167,10 +167,6 @@ jobs:
       - name: signing deb packages
         shell: bash
         run: |
-          echo "hello1"
-          GPG_TTY=$(tty)
-          echo "hello2"
-          export GPG_TTY
           echo "hello3"
           ar d "kubeadm_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
           echo "hello4"
