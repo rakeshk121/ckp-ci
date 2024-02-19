@@ -172,9 +172,9 @@ jobs:
           echo "hello4"
           ar d "kubelet_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
           ar d "kubectl_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
-          dpkg-sig -k coredgeio --sign builder kubeadm_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder kubelet_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder kubectl_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubeadm_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ env.VERSION }}-00_amd64.deb
           dpkg-sig --verify kubeadm_${{ env.VERSION }}-00_amd64.deb
           dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb
           dpkg-sig --verify kubectl_${{ env.VERSION }}-00_amd64.deb 
