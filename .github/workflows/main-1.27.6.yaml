@@ -169,10 +169,14 @@ jobs:
           sudo apt-get install dpkg-sig -y
           #GPG_TTY=$(tty)
           #export GPG_TTY
-          dpkg-sig -k coredgeio --sign builder kubeadm_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder kubelet_${{ env.VERSION }}-00_amd64.deb 
+          dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubeadm_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubelet_${{ env.VERSION }}-00_amd64.deb 
+          dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubectl_${{ env.VERSION }}-00_amd64.deb 
+          # dpkg-sig -k coredgeio --sign builder kubeadm_${{ env.VERSION }}-00_amd64.deb
+          # dpkg-sig -k coredgeio --sign builder kubelet_${{ env.VERSION }}-00_amd64.deb 
           dpkg-sig --verify kubeadm_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb 
+          dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig --verify kubectl_${{ env.VERSION }}-00_amd64.deb 
           
           #gpg -u A36B28D6A8E0FADA0FA759491FD5C19F325EE055 -b kubeadm_${{ env.VERSION }}-00_amd64.deb 
           #gpg -u A36B28D6A8E0FADA0FA759491FD5C19F325EE055 -b kubelet_${{ env.VERSION }}-00_amd64.deb 
