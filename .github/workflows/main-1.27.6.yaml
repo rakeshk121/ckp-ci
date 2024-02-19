@@ -166,7 +166,7 @@ jobs:
       - name: signing deb packages
         shell: bash
         run: |
-          sudo apt-get install dpkg-sig
+          sudo apt-get install dpkg-sig -y
           #GPG_TTY=$(tty)
           #export GPG_TTY
           dpkg-sig -k coredgeio --sign builder kubeadm_${{ env.VERSION }}-00_amd64.deb
