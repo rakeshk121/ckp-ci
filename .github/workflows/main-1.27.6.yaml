@@ -168,7 +168,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          sudo apt-get install dpkg-sig -y
+          sudo apt install dpkg-sig -y
           GPG_TTY=$(tty)
           export GPG_TTY
           # dpkg-sig -k coredgeio --sign builder --gpg-options "--pinentry-mode loopback" kubeadm_${{ env.VERSION }}-00_amd64.deb
