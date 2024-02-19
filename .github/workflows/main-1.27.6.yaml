@@ -193,7 +193,7 @@ jobs:
            image_version: v${{ env.VERSION }}-ckp
            docker_image_version: v${{ env.VERSION }}-rc1
         run: |
-          docker login -u kubedrona -p $docker_pass
+          docker login -u $docker_user -p $docker_pass
           cd _output/release-images/amd64
           docker load -i kube-scheduler.tar
           docker load -i kube-proxy.tar
