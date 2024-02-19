@@ -54,6 +54,7 @@ jobs:
           gpg --list-keys --no-tty
           gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
           gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
+          gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubectl
           #added here
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-apiserver
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
