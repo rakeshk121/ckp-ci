@@ -189,6 +189,7 @@ jobs:
         shell: bash
         env: 
            docker_pass: ${{secrets.DOCKER_PASSWORD}}
+           docker_user: ${{secrets.DOCKER_USER}}
            DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE}}
            image_version: v${{ env.VERSION }}-ckp
            docker_image_version: v${{ env.VERSION }}-rc1
