@@ -5,7 +5,7 @@
 #1.27.6 - 741c8db18a52787d734cbe4795f0b4ad860906d6
 #1.28.3 - a8a1abc25cad87333840cd7d54be2efaf31a3177
 #1.29.0 - 3f7a50f38688eb332e2a1b013678c6435d539ae6
-# It was finished successfully
+
 name: final_ci
 env:
   VERSION: "1.27.6"
@@ -20,31 +20,31 @@ jobs:
       #- '108'
     name: clone and create deb
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@v3
-      #   with:
-      #      repository: 'coredgeio/ckp'
-      #      ref: '741c8db18a52787d734cbe4795f0b4ad860906d6'
-      #      token: ${{ secrets.GH_PAT }}
-      # - name: Installing make
-      #   run: sudo apt install make dpkg -y
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+           repository: 'coredgeio/ckp'
+           ref: '741c8db18a52787d734cbe4795f0b4ad860906d6'
+           token: ${{ secrets.GH_PAT }}
+      - name: Installing make
+        run: sudo apt install make dpkg dpkg-sig -y
 
-      # - name: exporting env's and building deb's
-      #   run:  |
-      #      rm -rf /tmp/ckp-deb/*
-      #      export KUBE_GIT_MAJOR=1
-      #      export KUBE_GIT_COMMIT='741c8db18a52787d734cbe4795f0b4ad860906d6'
-      #      export KUBE_GIT_MINOR='27+'
-      #      export KUBE_GIT_VERSION='v${{ env.VERSION }}-ckp'
-      #      export KUBE_GIT_TREE_STATE='clean'
-      #      echo v${{ env.VERSION }}-ckp
-      #      # mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/usr/bin 
-      #      # echo kubeadm_${{ env.VERSION }}-00_amd64
-      #      make quick-release
-      #      ./_output/dockerized/bin/linux/amd64/kubeadm version
-      #      git clone https://github.com/Avnshrai/ckp-deb.git
-      #      chmod 777 ckp-deb/*
-      #      mv ckp-deb/* .
+      - name: exporting env's and building deb's
+        run:  |
+           rm -rf /tmp/ckp-deb/*
+           export KUBE_GIT_MAJOR=1
+           export KUBE_GIT_COMMIT='741c8db18a52787d734cbe4795f0b4ad860906d6'
+           export KUBE_GIT_MINOR='27+'
+           export KUBE_GIT_VERSION='v${{ env.VERSION }}-ckp'
+           export KUBE_GIT_TREE_STATE='clean'
+           echo v${{ env.VERSION }}-ckp
+           # mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/usr/bin 
+           # echo kubeadm_${{ env.VERSION }}-00_amd64
+           make quick-release
+           ./_output/dockerized/bin/linux/amd64/kubeadm version
+           git clone https://github.com/Avnshrai/ckp-deb.git
+           chmod 777 ckp-deb/*
+           mv ckp-deb/* .
             
       # - name: signing the binaries
       #   shell: bash
