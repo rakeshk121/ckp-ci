@@ -62,6 +62,8 @@ jobs:
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
       
+      - name: Checkout Repository
+        uses: actions/checkout@v2
  
       - name: Making Kubeadm Deb packages
         shell: bash
