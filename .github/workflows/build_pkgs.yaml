@@ -8,16 +8,14 @@
 
 name: final_ci
 env:
-  VERSION: "1.27.6"
-  RELEASE-VERSION: "release-1.27"
+  VERSION: ${{ env.VERSION }}
+  RELEASE-VERSION: ${{ env.RELEASE_VERSION }}
 on: [ workflow_dispatch ]
 jobs:
   script:
     #runs-on: ubuntu-latest
     runs-on:
       - self-hosted
-      # - ckp
-      #- '108'
     name: clone and create deb
     steps:
       - name: Checkout
@@ -32,25 +30,21 @@ jobs:
       - name: exporting env's and building deb's
         run:  |
            rm -rf /tmp/ckp-deb/*
-           export KUBE_GIT_MAJOR=1
+           export KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}
            export KUBE_GIT_COMMIT='741c8db18a52787d734cbe4795f0b4ad860906d6'
            export KUBE_GIT_MINOR='27+'
            export KUBE_GIT_VERSION='v${{ env.VERSION }}-ckp'
            export KUBE_GIT_TREE_STATE='clean'
            echo v${{ env.VERSION }}-ckp
-           # mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/usr/bin 
-           # echo kubeadm_${{ env.VERSION }}-00_amd64
            make quick-release
            ./_output/dockerized/bin/linux/amd64/kubeadm version
            git clone https://github.com/Avnshrai/ckp-deb.git
            chmod 777 ckp-deb/*
            mv ckp-deb/* .
             
-      - name: signing the binaries
+      - name: Clear the existing signature (in case of re-run)
         shell: bash
         run: | 
-          # GPG_TTY=$(tty)
-          # export GPG_TTY
           gpg --list-keys --no-tty
           gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
           gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
@@ -212,11 +206,3 @@ jobs:
           docker push kotdocker/kube-scheduler:$docker_image_version
           docker push kotdocker/kube-controller-manager:$docker_image_version 
     
-
-      # - name: upload_artifacts
-      #   uses: actions/upload-artifact@v3
-      #   with: 
-      #     name: debpackage
-      #     path: |
-      #       kubeadm_${{ env.VERSION }}-00_amd64.deb
-      #       kubelet_${{ env.VERSION }}-00_amd64.deb
