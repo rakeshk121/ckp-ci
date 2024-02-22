@@ -5,12 +5,10 @@ jobs:
   print_variables:
     runs-on: ubuntu-latest
     steps:
-      - name: Print the env variables
-        run: |
-          echo "REPO_VARIABLE=${{ env.KUBE_GIT_COMMIT }}"
-          echo "REPO_SECRET=${{ secrets.GH_PAT }}"
-          echo "${{ vars.KUBE_GIT_COMMIT }}"
-          echo "${{ env.KUBE_GIT_COMMIT }}"
-          echo "${{ vars.k8s_test.KUBE_GIT_COMMIT }}"
-          echo $KUBE_GIT_COMMIT
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
+    - name: List Files
+      run: |
+        echo "Listing files in the repository:"
+        find . -type f
