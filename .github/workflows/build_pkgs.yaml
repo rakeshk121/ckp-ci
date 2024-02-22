@@ -1,15 +1,13 @@
 # CREATING SIGN BINARIES OF KUBEADM/KUBELET
 # Signing the docker images of core-components
 # Creating and verifyiong deb packages of kubeadm kubelet
+
 #1.26.10 - b8609d4dd75c5d6fba4a5eaa63a5507cb39a6e99
 #1.27.6 - 741c8db18a52787d734cbe4795f0b4ad860906d6
 #1.28.3 - a8a1abc25cad87333840cd7d54be2efaf31a3177
 #1.29.0 - 3f7a50f38688eb332e2a1b013678c6435d539ae6
 
 name: build_pkgs_images
-# env:
-#   VERSION: ${{ env.VERSION }}
-#   RELEASE-VERSION: ${{ env.RELEASE_VERSION }}
 on: [ workflow_dispatch ]
 jobs:
   script:
@@ -18,34 +16,32 @@ jobs:
       - self-hosted
     name: clone and create deb
     steps:    
-      - name: Print Repository Variables
-        run: |
-          echo "REPO_VARIABLE=${{ env.KUBE_GIT_COMMIT }}"
-          echo ${{ vars.KUBE_GIT_COMMIT }}    
       - name: Print and Verify Env Variables
         run: |
-          echo ${{ vars.VERSION }}
-          echo ${{ vars.KUBE_GIT_MAJOR }}
-          echo ${{ vars.KUBE_GIT_MINOR }}
-          echo ${{ vars.KUBE_GIT_COMMIT }}
+          echo "${{ vars.VERSION }}"
+          echo "${{ vars.KUBE_GIT_MAJOR }}"
+          echo "${{ vars.KUBE_GIT_MINOR }}"
+          echo "${{ vars.KUBE_GIT_COMMIT }}"
+          
       - name: Checkout
         uses: actions/checkout@v3
         with:
            repository: 'coredgeio/ckp'
-           ref: '${{ vars.KUBE_GIT_COMMIT }}'
+           ref: "${{ vars.KUBE_GIT_COMMIT }}"
            token: ${{ secrets.GH_PAT }}
+           
       - name: Installing make
         run: sudo apt install make dpkg dpkg-sig -y
 
-      - name: exporting env's and building deb's
+      - name: exporting 's and building deb's
         run:  |
            rm -rf /tmp/ckp-deb/*
-           export KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}
-           export KUBE_GIT_COMMIT=${{ env.KUBE_GIT_COMMIT }}
-           export KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}
-           export KUBE_GIT_VERSION='v${{ env.KUBE_GIT_VERSION }}-ckp'
+           export KUBE_GIT_MAJOR=${{ vars.KUBE_GIT_MAJOR }}
+           export KUBE_GIT_COMMIT=${{ vars.KUBE_GIT_COMMIT }}
+           export KUBE_GIT_MINOR=${{ vars.KUBE_GIT_MINOR }}
+           export KUBE_GIT_VERSION='v${{ vars.KUBE_GIT_VERSION }}-ckp'
            export KUBE_GIT_TREE_STATE='clean'
-           echo v${{ env.VERSION }}-ckp
+           echo v${{ vars.VERSION }}-ckp
            make quick-release
            ./_output/dockerized/bin/linux/amd64/kubeadm version
            git clone https://github.com/Avnshrai/ckp-deb.git
@@ -68,91 +64,91 @@ jobs:
       - name: Making Kubeadm Deb packages
         shell: bash
         run: |
-           mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/usr/bin 
-           mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d
-           echo kubeadm_${{ env.VERSION }}-00_amd64
-           mkdir -p kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN
-           cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ env.VERSION }}-00_amd64/usr/bin/.
-           chmod +x kubeadm_${{ env.VERSION }}-00_amd64/usr/bin/*
-           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/control 
-           cat <<EOF > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin 
+           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d
+           echo kubeadm_${{ vars.VERSION }}-00_amd64
+           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN
+           cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/.
+           chmod +x kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/*
+           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control 
+           cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control
            Package: kubeadm
-           Version: ${{ env.VERSION }}-ckp
+           Version: ${{ vars.VERSION }}-ckp
            Maintainer: Coredge.io 
            Depends: libc6
            Architecture: amd64
            Description: kubeadmckp binary installation 
            EOF
            
-           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/conffiles
-           cat <<EOF > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/conffiles
+           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/conffiles
+           cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/conffiles
            /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            EOF
 
-           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums 
-           cat <<EOF > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums 
+           cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
            5aa23a287f43df95ceac1e24c62612c0  usr/bin/kubeadm
            EOF
            
-           touch kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
-           cat kubeadm/10-kubeadm.conf > kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-           chmod 644 kubeadm_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-           touch kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           cat kubeadm/postinst > kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           chmod 775 kubeadm_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           dpkg --build kubeadm_${{ env.VERSION }}-00_amd64
+           touch kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
+           cat kubeadm/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           chmod 644 kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           cat kubeadm/postinst > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           chmod 775 kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           dpkg --build kubeadm_${{ vars.VERSION }}-00_amd64
       
       - name: Making Kubelet Deb packages
         shell: bash
         run: |
-           mkdir -p kubelet_${{ env.VERSION }}-00_amd64/usr/bin
-           mkdir -p kubelet_${{ env.VERSION }}-00_amd64/DEBIAN
-           mkdir -p kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system
-           cp _output/dockerized/bin/linux/amd64/kubelet kubelet_${{ env.VERSION }}-00_amd64/usr/bin/.
-           chmod +x  kubelet_${{ env.VERSION }}-00_amd64/usr/bin/*
-           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/control 
-           cat <<EOF > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           mkdir -p kubelet_${{ vars.VERSION }}-00_amd64/usr/bin
+           mkdir -p kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN
+           mkdir -p kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system
+           cp _output/dockerized/bin/linux/amd64/kubelet kubelet_${{ vars.VERSION }}-00_amd64/usr/bin/.
+           chmod +x  kubelet_${{ vars.VERSION }}-00_amd64/usr/bin/*
+           touch kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/control 
+           cat <<EOF > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/control
            Package: kubelet 
-           Version: ${{ env.VERSION }}-ckp
+           Version: ${{ vars.VERSION }}-ckp
            Maintainer: Coredge.io 
            Depends: libc6
            Architecture: amd64
            Description: kubeletckp binary installation 
            EOF
 
-           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
-           cat <<EOF> kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
+           touch kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
+           cat <<EOF> kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
            dd8da554cf86fbd4937fea9d4459a2e2  lib/systemd/system/kubelet.service
            a1cdefcbbd6b3da2b6fdfee266b5ba1d  usr/bin/kubelet
            EOF
-           touch kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
-           touch kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/rules
-           cat kubelet/kubelet.service > kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
-           chmod 664 kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
-           cat kubelet/rules > kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/rules
-           chmod 664 kubelet_${{ env.VERSION }}-00_amd64/etc/systemd/system/rules
-           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postrm
-           touch kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/prerm
-           cat kubelet/postinst > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           chmod 775 kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           cat kubelet/postrm > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postrm
-           chmod 775 kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/postrm
-           cat kubelet/prerm > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/prerm
-           chmod 775 kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/prerm
-           dpkg --build kubelet_${{ env.VERSION }}-00_amd64
+           touch kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           touch kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
+           cat kubelet/kubelet.service > kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           chmod 664 kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           cat kubelet/rules > kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
+           chmod 664 kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
+           touch kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           touch kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/postrm
+           touch kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/prerm
+           cat kubelet/postinst > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           chmod 775 kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           cat kubelet/postrm > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/postrm
+           chmod 775 kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/postrm
+           cat kubelet/prerm > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/prerm
+           chmod 775 kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/prerm
+           dpkg --build kubelet_${{ vars.VERSION }}-00_amd64
            
       - name: creating kubectl deb package
         shell: bash
         run: |
-           mkdir -p kubectl_${{ env.VERSION }}-00_amd64/usr/bin 
-           mkdir -p kubectl_${{ env.VERSION }}-00_amd64/DEBIAN
-           touch kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/control
-           touch kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
-           touch kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           cat <<EOF> kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           mkdir -p kubectl_${{ vars.VERSION }}-00_amd64/usr/bin 
+           mkdir -p kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN
+           touch kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
+           touch kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
+           touch kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           cat <<EOF> kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
            Package: kubectl
-           Version: ${{ env.VERSION }}-ckp
+           Version: ${{ vars.VERSION }}-ckp
            Architecture: amd64
            Maintainer: Kubernetes Authors <kubernetes-dev+release@googlegroups.com>
            Installed-Size: 47585
@@ -162,32 +158,32 @@ jobs:
            Description: Kubernetes Command Line Tool
            EOF
            
-           cat kubectl/md5sums > kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/md5sums
-           cat kubectl/postinst > kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           chmod 775 kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/postinst
-           cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ env.VERSION }}-00_amd64/usr/bin/kubectl
-           dpkg --build kubectl_${{ env.VERSION }}-00_amd64
+           cat kubectl/md5sums > kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
+           cat kubectl/postinst > kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           chmod 775 kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+           cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/kubectl
+           dpkg --build kubectl_${{ vars.VERSION }}-00_amd64
 
       - name: signing deb packages
         shell: bash
         run: |
-          ar d "kubeadm_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
-          ar d "kubelet_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
-          ar d "kubectl_${{ env.VERSION }}-00_amd64.deb" _gpgbuilder
+          ar d "kubeadm_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
+          ar d "kubelet_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
+          ar d "kubectl_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
           
-          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubeadm_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ env.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ env.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubeadm_${{ vars.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ vars.VERSION }}-00_amd64.deb
+          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ vars.VERSION }}-00_amd64.deb
           echo "test1"
-          # dpkg-sig --verify kubeadm_${{ env.VERSION }}-00_amd64.deb
-          # dpkg-sig --verify kubelet_${{ env.VERSION }}-00_amd64.deb
-          # dpkg-sig --verify kubectl_${{ env.VERSION }}-00_amd64.deb 
+          # dpkg-sig --verify kubeadm_${{ vars.VERSION }}-00_amd64.deb
+          # dpkg-sig --verify kubelet_${{ vars.VERSION }}-00_amd64.deb
+          # dpkg-sig --verify kubectl_${{ vars.VERSION }}-00_amd64.deb 
           echo "test2"
           mkdir -p /tmp/ckp-deb
           echo "test3"
-          cp kubeadm_${{ env.VERSION }}-00_amd64.deb /tmp/ckp-deb
-          cp kubelet_${{ env.VERSION }}-00_amd64.deb /tmp/ckp-deb
-          cp kubectl_${{ env.VERSION }}-00_amd64.deb /tmp/ckp-deb
+          cp kubeadm_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
+          cp kubelet_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
+          cp kubectl_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
       
       - name: pushing images to dockerhub
         shell: bash
@@ -195,8 +191,8 @@ jobs:
            docker_pass: ${{secrets.DOCKER_PASSWORD}}
            docker_user: ${{secrets.DOCKER_USER}}
            DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE}}
-           image_version: v${{ env.VERSION }}-ckp
-           docker_image_version: v${{ env.VERSION }}-rc1
+           image_version: v${{ vars.VERSION }}-ckp
+           docker_image_version: v${{ vars.VERSION }}-rc1
         run: |
           docker login -u $docker_user -p $docker_pass
           cd _output/release-images/amd64
