@@ -5,15 +5,33 @@ jobs:
   print_variables:
     runs-on: ubuntu-latest
     steps:
+    - name: print the current working directory
+      shell: bash
+      run:
+        pwd
+        
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+         repository: 'coredgeio/ckp'
+         ref: "${{ vars.KUBE_GIT_COMMIT }}"
+         token: ${{ secrets.GH_PAT }}
+         
+    - name: print the current working directory
+      shell: bash
+      run:
+        pwd
+        
     - name: Checkout Repository
       uses: actions/checkout@v2
+
+    - name: print the current working directory
+      shell: bash
+      run:
+        pwd
 
     - name: List Files
       run: |
         echo "Listing files in the repository:"
         find . -type f
 
-    - name: print the current working directory
-      shell: bash
-      run:
-        pwd
