@@ -22,6 +22,7 @@ jobs:
           echo "${{ vars.KUBE_GIT_MAJOR }}"
           echo "${{ vars.KUBE_GIT_MINOR }}"
           echo "${{ vars.KUBE_GIT_COMMIT }}"
+          echo "${{ vars.RELEASE_VERSION }}"
           
       - name: Checkout
         uses: actions/checkout@v3
@@ -39,7 +40,7 @@ jobs:
            export KUBE_GIT_MAJOR=${{ vars.KUBE_GIT_MAJOR }}
            export KUBE_GIT_COMMIT=${{ vars.KUBE_GIT_COMMIT }}
            export KUBE_GIT_MINOR=${{ vars.KUBE_GIT_MINOR }}
-           export KUBE_GIT_VERSION='v${{ vars.KUBE_GIT_VERSION }}-ckp'
+           export KUBE_GIT_VERSION="v${{ vars.VERSION }}-ckp"
            export KUBE_GIT_TREE_STATE='clean'
            echo v${{ vars.VERSION }}-ckp
            make quick-release
