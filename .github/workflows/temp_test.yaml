@@ -24,6 +24,7 @@ jobs:
          mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d
          echo kubeadm_${{ vars.VERSION }}-00_amd64
          mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN
+         pwd
          cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/.
          chmod +x kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/*
          touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control 
