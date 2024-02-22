@@ -17,21 +17,18 @@ jobs:
     runs-on:
       - self-hosted
     name: clone and create deb
-    steps:
-      - name: Print Secret Values
-        run: |
-          echo "GH_PAT=${{ secrets.GH_PAT }}"    
+    steps:    
       - name: Print and Verify Env Variables
         run: |
-          echo '${{ env.KUBE_GIT_MAJOR }}'
-          echo '${{ env.KUBE_GIT_COMMIT }}'
-          echo '${{ env.KUBE_GIT_MINOR }}'
-          echo '${{ env.VERSION }}' 
+          echo '${{ vars.VERSION }}' 
+          echo '${{ vars.KUBE_GIT_MAJOR }}'
+          echo '${{ vars.KUBE_GIT_MINOR }}'
+          echo '${{ vars.KUBE_GIT_COMMIT }}'
       - name: Checkout
         uses: actions/checkout@v3
         with:
            repository: 'coredgeio/ckp'
-           ref: '741c8db18a52787d734cbe4795f0b4ad860906d6'
+           ref: '${{ vars.KUBE_GIT_COMMIT }}'
            token: ${{ secrets.GH_PAT }}
       - name: Installing make
         run: sudo apt install make dpkg dpkg-sig -y
