@@ -8,3 +8,5 @@ jobs:
       - name: Print Repository Variables
         run: |
           echo "REPO_VARIABLE=${{ env.KUBE_GIT_COMMIT }}"
+      - name: Print Entire Environment
+        run: env
