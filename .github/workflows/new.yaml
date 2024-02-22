@@ -7,5 +7,4 @@ jobs:
     steps:
       - name: Print Repository Variables
         run: |
-          echo "REPO_VARIABLE=${{ env.REPO_VARIABLE }}"
-          echo "Other_Variable=${{ env.Other_Variable }}"
+          echo "REPO_VARIABLE=${{ env.KUBE_GIT_COMMIT }}"
