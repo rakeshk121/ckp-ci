@@ -33,7 +33,7 @@ jobs:
            export KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}
            export KUBE_GIT_COMMIT=${{ env.KUBE_GIT_COMMIT }}
            export KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}
-           export KUBE_GIT_VERSION='v${{ env.VERSION }}-ckp'
+           export KUBE_GIT_VERSION='v${{ env.KUBE_GIT_VERSION }}-ckp'
            export KUBE_GIT_TREE_STATE='clean'
            echo v${{ env.VERSION }}-ckp
            make quick-release
