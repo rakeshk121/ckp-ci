@@ -61,9 +61,22 @@ jobs:
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
-      
+
+
+      - name: print the current working directory
+        shell: bash
+        run:
+          pwd
+        
       - name: Checkout Repository
         uses: actions/checkout@v2
+        with:
+          path: my-repo        
+
+      - name: print the current working directory
+        shell: bash
+        run:
+          pwd
  
       - name: Making Kubeadm Deb packages
         shell: bash
@@ -98,7 +111,7 @@ jobs:
            touch kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
            major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
            echo $major_version
-           cat kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           cat my_repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            chmod 644 kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
            cat kubeadm/postinst > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
