@@ -111,7 +111,7 @@ jobs:
            touch kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
            major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
            echo $major_version
-           cat my_repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           cat my_repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/lib/systemd/system/kubelet.service.d/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            chmod 644 kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
            cat kubeadm/postinst > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
