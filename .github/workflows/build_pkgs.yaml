@@ -18,6 +18,10 @@ jobs:
       - self-hosted
     name: clone and create deb
     steps:    
+      - name: Print Repository Variables
+        run: |
+          echo "REPO_VARIABLE=${{ env.KUBE_GIT_COMMIT }}"
+          echo ${{ vars.KUBE_GIT_COMMIT }}    
       - name: Print and Verify Env Variables
         run: |
           echo ${{ vars.VERSION }}
