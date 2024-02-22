@@ -12,3 +12,8 @@ jobs:
       run: |
         echo "Listing files in the repository:"
         find . -type f
+
+    - name: print the current working directory
+      shell: bash
+      run:
+        pwd
