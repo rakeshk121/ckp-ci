@@ -23,10 +23,10 @@ jobs:
           echo "GH_PAT=${{ secrets.GH_PAT }}"    
       - name: Print and Verify Env Variables
         run: |
-          echo "KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}"
-          echo "KUBE_GIT_COMMIT=${{ env.KUBE_GIT_COMMIT }}"
-          echo "KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}"
-          echo "VERSION=${{ env.VERSION }}"    
+          echo "KUBE_GIT_MAJOR={{ env.KUBE_GIT_MAJOR }}"
+          echo "KUBE_GIT_COMMIT={{ env.KUBE_GIT_COMMIT }}"
+          echo "KUBE_GIT_MINOR={{ env.KUBE_GIT_MINOR }}"
+          echo "VERSION={{ env.VERSION }}"    
       - name: Checkout
         uses: actions/checkout@v3
         with:
