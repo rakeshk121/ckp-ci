@@ -1,0 +1,11 @@
+name: Print Repository Variables
+on: [workflow_dispatch]
+
+jobs:
+  print_variables:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Repository Variables
+        run: |
+          echo "REPO_VARIABLE=${{ env.REPO_VARIABLE }}"
+          echo "Other_Variable=${{ env.Other_Variable }}"
