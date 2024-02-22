@@ -62,6 +62,7 @@ jobs:
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
           # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
       
+ 
       - name: Making Kubeadm Deb packages
         shell: bash
         run: |
@@ -69,6 +70,7 @@ jobs:
            mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d
            echo kubeadm_${{ vars.VERSION }}-00_amd64
            mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN
+           pwd
            cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/.
            chmod +x kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/*
            touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control 
@@ -85,19 +87,22 @@ jobs:
            cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/conffiles
            /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            EOF
-
+  
            touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums 
            cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
            5aa23a287f43df95ceac1e24c62612c0  usr/bin/kubeadm
            EOF
            
            touch kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
-           cat kubeadm/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
+           echo $major_version
+           cat kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            chmod 644 kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
            cat kubeadm/postinst > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
            chmod 775 kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
            dpkg --build kubeadm_${{ vars.VERSION }}-00_amd64
+
       
       - name: Making Kubelet Deb packages
         shell: bash
