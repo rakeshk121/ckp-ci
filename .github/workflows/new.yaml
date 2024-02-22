@@ -11,4 +11,5 @@ jobs:
       - name: Print Entire Environment
         run: env
       - name: Print Repository Environment Variable
-        run: echo "RELEASE_VERSION=${{ env.INPUT_RELEASE_VERSION }}"
+        run: echo "RELEASE_VERSION=${RELEASE_VERSION}"
+
