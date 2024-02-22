@@ -1,11 +1,11 @@
-name: Print Repository Variables
+name: temp_test
 on: [workflow_dispatch]
 
 jobs:
   print_variables:
     runs-on: ubuntu-latest
     steps:
-      - name: t
+      - name: Print the env variables
         run: |
           echo "REPO_VARIABLE=${{ env.KUBE_GIT_COMMIT }}"
           echo "REPO_SECRET=${{ secrets.GH_PAT }}"
