@@ -6,7 +6,7 @@
 #1.28.3 - a8a1abc25cad87333840cd7d54be2efaf31a3177
 #1.29.0 - 3f7a50f38688eb332e2a1b013678c6435d539ae6
 
-name: final_ci
+name: build_pkgs_images
 env:
   VERSION: ${{ env.VERSION }}
   RELEASE-VERSION: ${{ env.RELEASE_VERSION }}
