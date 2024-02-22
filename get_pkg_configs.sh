@@ -42,9 +42,9 @@ for package in "${package_names[@]}"; do
         
         # Download deb packages into the folder
         apt-get download ${package}=${version}-*
-        dpkg-deb -x $(ls kubeadm_${version}-*.deb) kubeadm_${version}
-        rm -f $(ls kubeadm_${version}-*.deb)
-        rm -rf kubeadm_${version}/usr
+        dpkg-deb -x $(ls ${package}_${version}-*.deb) ${package}_${version}
+        rm -f $(ls ${package}_${version}-*.deb)
+        rm -rf ${package}_${version}/usr
 
         # Return to the original working directory
         cd "$script_dir"
