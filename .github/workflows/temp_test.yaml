@@ -10,12 +10,8 @@ jobs:
       run:
         pwd
         
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-         repository: 'coredgeio/ckp'
-         ref: "${{ vars.KUBE_GIT_COMMIT }}"
-         token: ${{ secrets.GH_PAT }}
+    - name: Checkout Repository
+      uses: actions/checkout@v2
          
     - name: Making Kubeadm Deb packages
       shell: bash
