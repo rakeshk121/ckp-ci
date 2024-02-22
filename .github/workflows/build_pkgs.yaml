@@ -31,8 +31,8 @@ jobs:
         run:  |
            rm -rf /tmp/ckp-deb/*
            export KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}
-           export KUBE_GIT_COMMIT='741c8db18a52787d734cbe4795f0b4ad860906d6'
-           export KUBE_GIT_MINOR='27+'
+           export KUBE_GIT_COMMIT=${{ env.KUBE_GIT_COMMIT }}
+           export KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}
            export KUBE_GIT_VERSION='v${{ env.VERSION }}-ckp'
            export KUBE_GIT_TREE_STATE='clean'
            echo v${{ env.VERSION }}-ckp
