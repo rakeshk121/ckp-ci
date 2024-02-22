@@ -20,10 +20,10 @@ jobs:
     steps:    
       - name: Print and Verify Env Variables
         run: |
-          echo '${{ vars.VERSION }}' 
-          echo '${{ vars.KUBE_GIT_MAJOR }}'
-          echo '${{ vars.KUBE_GIT_MINOR }}'
-          echo '${{ vars.KUBE_GIT_COMMIT }}'
+          echo ${{ vars.VERSION }}
+          echo ${{ vars.KUBE_GIT_MAJOR }}
+          echo ${{ vars.KUBE_GIT_MINOR }}
+          echo ${{ vars.KUBE_GIT_COMMIT }}
       - name: Checkout
         uses: actions/checkout@v3
         with:
