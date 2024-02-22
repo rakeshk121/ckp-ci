@@ -18,6 +18,12 @@ jobs:
       - self-hosted
     name: clone and create deb
     steps:
+      - name: Print and Verify Env Variables
+        run: |
+          echo "KUBE_GIT_MAJOR=${KUBE_GIT_MAJOR}"
+          echo "KUBE_GIT_COMMIT=${KUBE_GIT_COMMIT}"
+          echo "KUBE_GIT_MINOR=${KUBE_GIT_MINOR}"
+          echo "VERSION=${VERSION}"    
       - name: Checkout
         uses: actions/checkout@v3
         with:
