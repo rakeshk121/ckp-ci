@@ -1,4 +1,4 @@
-name: push deb
+name: byoh_bundle
 env:
   VERSION: "1.27.6"
   apt-version: "1.27"
