@@ -29,7 +29,7 @@ for package in "${package_names[@]}"; do
 
     # Iterate through the unique versions, create folder structure, and download deb packages
     for version in $unique_k8s_versions; do
-        echo $version
+        echo "Getting the ${package} for k8s version $version"
         # Extract major and minor version components
         major_minor_version=$(echo $version | cut -d'.' -f1-2)
 
