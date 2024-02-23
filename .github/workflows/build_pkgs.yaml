@@ -144,7 +144,8 @@ jobs:
            EOF
            touch kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
            touch kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
-           cat kubelet/kubelet.service > kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
+           cat my-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/lib/systemd/system/kubelet.service.d/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
            chmod 664 kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
            cat kubelet/rules > kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
            chmod 664 kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
