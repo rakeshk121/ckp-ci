@@ -8,8 +8,7 @@ jobs:
     #runs-on: ubuntu-latest
     runs-on:
       - self-hosted
-      # - ckp
-      #- '108'
+
     name: clone and create deb
     steps: 
       - name: Checkout
@@ -33,15 +32,13 @@ jobs:
             curl -LOJR https://github.com/containerd/containerd/releases/download/v1.6.18/cri-containerd-cni-1.6.18-linux-amd64.tar.gz
             echo Download the Google Cloud public signing key
             sudo apt-get install gpg -y
-            # sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
+
             sudo apt-get update
             sudo apt-get install wget -y 
-            echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${{env.apt-version}}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-            #sudo curl -fsSLo /etc/apt/keyrings/kubernetes-apt-keyring.gpg  https://pkgs.k8s.io/core:/stable:/v${{env.apt-version}}/deb/Release.key
+            echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${{vars.apt-version}}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
             
             sudo mkdir -p /etc/apt/keyrings
             curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-            # sudo touch /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
             echo Update apt package index, install kubelet, kubeadm and kubectl
             sudo apt-get update
@@ -53,7 +50,7 @@ jobs:
             cat <<EOF > Dockerfile
             FROM ubuntu:20.04 as build
             ENV CONTAINERD_VERSION=1.6.18
-            ENV KUBERNETES_VERSION=${{env.VERSION}}-00
+            ENV KUBERNETES_VERSION=${{vars.VERSION}}-00
             ENV ARCH=amd64
             RUN apt-get update \
                 && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo
@@ -73,10 +70,10 @@ jobs:
         run: |
             pwd
             cd installer/bundle_builder/ingredients/deb/byoh-ingredients-download/
-            rm -rf kubelet_${{env.VERSION}}-00_amd64.deb kubeadm_${{env.VERSION}}-00_amd64.deb kubectl_${{env.VERSION}}-00_amd64.deb
-            cp /tmp/ckp-deb/kubelet_${{env.VERSION}}-00_amd64.deb .
-            cp /tmp/ckp-deb/kubeadm_${{env.VERSION}}-00_amd64.deb .
-            cp /tmp/ckp-deb/kubectl_${{env.VERSION}}-00_amd64.deb .
+            rm -rf kubelet_${{vars.VERSION}}-00_amd64.deb kubeadm_${{vars.VERSION}}-00_amd64.deb kubectl_${{vars.VERSION}}-00_amd64.deb
+            cp /tmp/ckp-deb/kubelet_${{vars.VERSION}}-00_amd64.deb .
+            cp /tmp/ckp-deb/kubeadm_${{vars.VERSION}}-00_amd64.deb .
+            cp /tmp/ckp-deb/kubectl_${{vars.VERSION}}-00_amd64.deb .
       - name: Pushing bundles
         shell: bash
         env: 
@@ -117,7 +114,7 @@ jobs:
             docker login -u $docker_user -p $docker_pass
             echo Pushing bundle "$*"
             echo $@
-            imgpkg push -f . -i docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
+            imgpkg push -f . -i docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
             echo Done
             EOF
             
@@ -125,4 +122,4 @@ jobs:
             echo "**************"
             pwd
             echo "*************"
-            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{env.VERSION}}
+            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
