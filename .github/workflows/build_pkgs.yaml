@@ -49,18 +49,18 @@ jobs:
            chmod 777 ckp-deb/*
            mv ckp-deb/* .
             
-      - name: Clear the existing signature (in case of re-run)
-        shell: bash
-        run: | 
-          gpg --list-keys --no-tty
-          gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
-          gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
-          gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubectl
-          #added here
-          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-apiserver
-          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
-          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
-          # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
+      # - name: Clear the existing signature (in case of re-run)
+      #   shell: bash
+      #   run: | 
+      #     gpg --list-keys --no-tty
+      #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
+      #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
+      #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubectl
+      #     #added here
+      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-apiserver
+      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
+      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
+      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
 
 
       - name: print the current working directory
@@ -111,7 +111,7 @@ jobs:
            touch kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
            major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
            echo $major_version
-           cat my_repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/lib/systemd/system/kubelet.service.d/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           cat my-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/lib/systemd/system/kubelet.service.d/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            chmod 644 kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
            touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
            cat kubeadm/postinst > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
