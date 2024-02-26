@@ -71,7 +71,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
-          path: my-repo        
+          path: config-repo        
 
       - name: print the current working directory
         shell: bash
@@ -81,14 +81,18 @@ jobs:
       - name: Making Kubeadm Deb packages
         shell: bash
         run: |
-           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin 
-           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d
            echo kubeadm_${{ vars.VERSION }}-00_amd64
-           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN
-           pwd
+           #creating bin folder and copy the kubeadm binary
+           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin 
            cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/.
            chmod +x kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/*
-           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control 
+           ls kubeadm_${{ vars.VERSION }}-00_amd64
+
+          
+           #Copy the config files lile control, service files
+           cp config-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }} kubeadm_${{ vars.VERSION }}-00_amd64
+           ls kubeadm_${{ vars.VERSION }}-00_amd64
+           
            cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control
            Package: kubeadm
            Version: ${{ vars.VERSION }}-ckp
@@ -97,25 +101,7 @@ jobs:
            Architecture: amd64
            Description: kubeadmckp binary installation 
            EOF
-           
-           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/conffiles
-           cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/conffiles
-           /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-           EOF
-  
-           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums 
-           cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
-           5aa23a287f43df95ceac1e24c62612c0  usr/bin/kubeadm
-           EOF
-           
-           touch kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf 
-           major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
-           echo $major_version
-           cat my-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/lib/systemd/system/kubelet.service.d/10-kubeadm.conf > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-           chmod 644 kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-           touch kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
-           cat kubeadm/postinst > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
-           chmod 775 kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
+
            dpkg --build kubeadm_${{ vars.VERSION }}-00_amd64
 
       
@@ -145,7 +131,7 @@ jobs:
            touch kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
            touch kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
            major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
-           cat my-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/lib/systemd/system/kubelet.service > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+           cat config-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/lib/systemd/system/kubelet.service > kubeadm_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
            chmod 664 kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/kubelet.service
            cat kubelet/rules > kubelet_${{ vars.VERSION }}-00_amd64/etc/systemd/system/rules
