@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+if [ "$1" = "configure" ] ; then
+        # Initial installation
+        systemctl preset kubelet.service >/dev/null 2>&1 || :
+fi

@@ -1,0 +1,10 @@
+Package: kubectl
+Version: 1.26.2-1.1
+Section: admin
+Priority: optional
+Architecture: amd64
+Installed-Size: 46947
+Maintainer: Kubernetes Authors <dev@kubernetes.io>
+Description: Command-line utility for interacting with a Kubernetes cluster
+ Command-line utility for interacting with a Kubernetes cluster.
+Homepage: https://kubernetes.io

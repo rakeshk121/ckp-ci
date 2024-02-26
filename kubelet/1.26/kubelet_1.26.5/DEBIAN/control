@@ -1,0 +1,11 @@
+Package: kubelet
+Version: 1.26.5-1.1
+Section: net
+Priority: optional
+Architecture: amd64
+Installed-Size: 118518
+Maintainer: Kubernetes Authors <dev@kubernetes.io>
+Description: Node agent for Kubernetes clusters
+ Node agent for Kubernetes clusters.
+Homepage: https://kubernetes.io
+Depends: iptables (>= 1.4.21),kubernetes-cni (>= 1.1.1),iproute2,mount,socat,util-linux,ethtool,ebtables,conntrack,libc6

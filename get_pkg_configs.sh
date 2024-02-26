@@ -3,7 +3,8 @@ sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl
 
 k8s_versions=("1.26" "1.27" "1.28" "1.29")
-package_names=("kubeadm" "kubelet")
+package_names=("kubeadm" "kubelet" "kubectl")
+
 
 # Iterate through all the k8s_versions and update the debian source repo for each verions
 for version in "${k8s_versions[@]}"; do
@@ -43,6 +44,7 @@ for package in "${package_names[@]}"; do
         # Download deb packages into the folder
         apt-get download ${package}=${version}-*
         dpkg-deb -x $(ls ${package}_${version}-*.deb) ${package}_${version}
+        dpkg -e $(ls ${package}_${version}-*.deb) ${package}_${version}/DEBIAN
         rm -f $(ls ${package}_${version}-*.deb)
         rm -rf ${package}_${version}/usr
 
