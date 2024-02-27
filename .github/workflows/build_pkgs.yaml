@@ -1,6 +1,7 @@
-# CREATING SIGN BINARIES OF KUBEADM/KUBELET
-# Signing the docker images of core-components
-# Creating and verifyiong deb packages of kubeadm kubelet
+# This workflow performs following actions
+# Building and Signing of Binaries: KUBEADM, KUBELET and KUBECTL
+# Building and Signing of Docker images of Core-components
+# Creating deb packages of KUBEADM, KUBELET and KUBECTL
 
 #1.26.10 - b8609d4dd75c5d6fba4a5eaa63a5507cb39a6e99
 #1.27.6 - 741c8db18a52787d734cbe4795f0b4ad860906d6
@@ -31,10 +32,10 @@ jobs:
            ref: "${{ vars.KUBE_GIT_COMMIT }}"
            token: ${{ secrets.GH_PAT }}
            
-      - name: Installing make
+      - name: Installing make dpkg dpkg-sig
         run: sudo apt install make dpkg dpkg-sig -y
 
-      - name: exporting 's and building deb's
+      - name: Build k8s core images and binaries
         run:  |
            rm -rf /tmp/ckp-deb/*
            export KUBE_GIT_MAJOR=${{ vars.KUBE_GIT_MAJOR }}
@@ -60,7 +61,7 @@ jobs:
       #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
 
 
-      - name: Checkout Repository
+      - name: Checkout Repository for k8s core components configs
         uses: actions/checkout@v2
         with:
           path: config-repo        
@@ -88,7 +89,7 @@ jobs:
            Maintainer: Coredge.io 
            Depends: libc6
            Architecture: amd64
-           Description: kubeadmckp binary installation 
+           Description: kubeadm ckp binary installation 
            EOF
 
            dpkg --build kubeadm_${{ vars.VERSION }}-00_amd64
@@ -109,13 +110,13 @@ jobs:
            cp -r config-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/* kubelet_${{ vars.VERSION }}-00_amd64
            ls kubelet_${{ vars.VERSION }}-00_amd64
            
-           cat <<EOF > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/control
-           Package: kubelet
-           Version: ${{ vars.VERSION }}-ckp
+           cat <<EOF > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           Package: kubelet 
+           Version: ${{ env.VERSION }}-ckp
            Maintainer: Coredge.io 
            Depends: libc6
            Architecture: amd64
-           Description: kubelet binary installation 
+           Description: kubelet ckp binary installation 
            EOF
 
            dpkg --build kubelet_${{ vars.VERSION }}-00_amd64
@@ -123,51 +124,51 @@ jobs:
       - name: Creating kubectl deb package
         shell: bash
         run: |
+           echo kubectl_${{ vars.VERSION }}-00_amd64
+           # Creating bin folder and copy the kubectl binary
            mkdir -p kubectl_${{ vars.VERSION }}-00_amd64/usr/bin 
-           mkdir -p kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN
-           touch kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
-           touch kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
-           touch kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
-           cat <<EOF> kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
+           cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/.
+           chmod +x kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/*
+           ls kubectl_${{ vars.VERSION }}-00_amd64
+
+           # Copy the config files lile control, service files
+           major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
+           cp -r config-repo/kubectl/$major_version/kubectl_${{ vars.VERSION }}/* kubectl_${{ vars.VERSION }}-00_amd64
+           ls kubectl_${{ vars.VERSION }}-00_amd64
+           
+           cat <<EOF> kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/control
            Package: kubectl
-           Version: ${{ vars.VERSION }}-ckp
+           Version: ${{ env.VERSION }}-ckp
            Architecture: amd64
-           Maintainer: Kubernetes Authors <kubernetes-dev+release@googlegroups.com>
+           Maintainer: Coredge.io
            Installed-Size: 47585
            Section: misc
            Priority: optional
-           Homepage: https://kubernetes.io
-           Description: Kubernetes Command Line Tool
+           Description: CKP Command Line Tool
            EOF
-           
-           cat kubectl/md5sums > kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/md5sums
-           cat kubectl/postinst > kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
-           chmod 775 kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/postinst
-           cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/kubectl
+
            dpkg --build kubectl_${{ vars.VERSION }}-00_amd64
 
-      - name: signing deb packages
+      - name: Signing deb packages
         shell: bash
         run: |
+          # Removing if any existing signatures
           ar d "kubeadm_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
           ar d "kubelet_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
           ar d "kubectl_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
           
+          # Signing the debian packages
           dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubeadm_${{ vars.VERSION }}-00_amd64.deb
           dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ vars.VERSION }}-00_amd64.deb
           dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ vars.VERSION }}-00_amd64.deb
-          echo "test1"
-          # dpkg-sig --verify kubeadm_${{ vars.VERSION }}-00_amd64.deb
-          # dpkg-sig --verify kubelet_${{ vars.VERSION }}-00_amd64.deb
-          # dpkg-sig --verify kubectl_${{ vars.VERSION }}-00_amd64.deb 
-          echo "test2"
+
+          # Move the pacakges to common folder
           mkdir -p /tmp/ckp-deb
-          echo "test3"
           cp kubeadm_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
           cp kubelet_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
           cp kubectl_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
       
-      - name: pushing images to dockerhub
+      - name: Pushing k8s core components Docker images to Dockerhub
         shell: bash
         env: 
            docker_pass: ${{secrets.DOCKER_PASSWORD}}
@@ -183,14 +184,14 @@ jobs:
           docker load -i kube-controller-manager.tar
           docker load -i kube-apiserver.tar
 
-          docker tag registry.k8s.io/kube-apiserver-amd64:$image_version kotdocker/kube-apiserver:$docker_image_version
-          docker tag registry.k8s.io/kube-proxy-amd64:$image_version kotdocker/kube-proxy:$docker_image_version
-          docker tag registry.k8s.io/kube-scheduler-amd64:$image_version kotdocker/kube-scheduler:$docker_image_version
-          docker tag registry.k8s.io/kube-controller-manager-amd64:$image_version kotdocker/kube-controller-manager:$docker_image_version
+          docker tag registry.k8s.io/kube-apiserver-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
+          docker tag registry.k8s.io/kube-proxy-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
+          docker tag registry.k8s.io/kube-scheduler-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
+          docker tag registry.k8s.io/kube-controller-manager-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version
           
           export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE
-          docker push kotdocker/kube-apiserver:$docker_image_version
-          docker push kotdocker/kube-proxy:$docker_image_version
-          docker push kotdocker/kube-scheduler:$docker_image_version
-          docker push kotdocker/kube-controller-manager:$docker_image_version 
+          docker push ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
+          docker push ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
+          docker push ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
+          docker push ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version 
     
