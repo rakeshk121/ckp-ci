@@ -13,11 +13,13 @@ jobs:
         with:
            repository: 'vmware-tanzu/cluster-api-provider-bringyourownhost'
            ref: 'main'
-      - name: Downloading other required packages
+
+      - name: Downloading required packages
         run: | 
             cd installer/bundle_builder/ingredients/deb/
-            rm -rf Dockerfile
-            rm -rf download.sh
+            rm -f Dockerfile download.sh
+
+            #Create download.sh with script to install required packages 
             touch download.sh
             cat <<EOF > download.sh
             #!/bin/bash
@@ -25,7 +27,7 @@ jobs:
             echo  Update the apt package index and install packages needed to use the Kubernetes apt repository
             sudo apt-get update
             sudo apt-get install -y apt-transport-https ca-certificates curl
-            echo Download containerd
+            echo "Download Containerd"
             curl -LOJR https://github.com/containerd/containerd/releases/download/v1.6.18/cri-containerd-cni-1.6.18-linux-amd64.tar.gz
             echo Download the Google Cloud public signing key
             sudo apt-get install gpg -y
@@ -35,7 +37,7 @@ jobs:
             echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${{vars.apt_version}}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
             
             sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+            curl -fsSL https://pkgs.k8s.io/core:/stable:/v${{vars.apt_version}}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
             echo Update apt package index, install kubelet, kubeadm and kubectl
             sudo apt-get update
@@ -43,6 +45,7 @@ jobs:
             sudo apt-get download cri-tools:$ARCH=1.27.1-1.1
             EOF
             
+            #Create Dockerfile which the download.sh created above
             touch Dockerfile
             cat <<EOF > Dockerfile
             FROM ubuntu:20.04 as build
@@ -58,10 +61,12 @@ jobs:
             ENTRYPOINT ["/bundle-builder/download.sh"]
             EOF
 
+            # Build the docker file to create byoh bundle
             docker build -t byoh-ingredients-deb .
             mkdir -p byoh-ingredients-download
             chmod 777 byoh-ingredients-download
             docker run --rm -v `pwd`/byoh-ingredients-download:/ingredients byoh-ingredients-deb
+
       - name: Moving custom deb packages
         shell: bash
         run: |
@@ -71,6 +76,7 @@ jobs:
             cp /tmp/ckp-deb/kubelet_${{vars.VERSION}}-00_amd64.deb .
             cp /tmp/ckp-deb/kubeadm_${{vars.VERSION}}-00_amd64.deb .
             cp /tmp/ckp-deb/kubectl_${{vars.VERSION}}-00_amd64.deb .
+
       - name: Pushing bundles
         shell: bash
         env: 
@@ -81,6 +87,7 @@ jobs:
             cd installer/bundle_builder
             rm -rf push-bundle.sh
             rm -rf Dockerfile
+
             cat <<EOF > Dockerfile
             FROM ubuntu:20.04
             ENV BUILD_ONLY=1
@@ -99,11 +106,6 @@ jobs:
             cat <<EOF > push-bundle.sh
             #!/bin/bash
             set -e
-            # apt update
-            # apt-get install wget
-            # wget https://github.com/carvel-dev/imgpkg/releases/download/v0.39.0/imgpkg-linux-amd64
-            # chmod +x imgpkg-linux-amd64
-            # mv imgpkg-linux-amd64 /usr/bin/imgpkg
             mkdir local-bin/
             curl -L https://carvel.dev/install.sh | K14SIO_INSTALL_BIN_DIR=local-bin bash
             export PATH=$PWD/local-bin/:$PATH
@@ -111,7 +113,7 @@ jobs:
             docker login -u $docker_user -p $docker_pass
             echo Pushing bundle "$*"
             echo $@
-            imgpkg push -f . -i docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
+            imgpkg push -f . -i docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
             echo Done
             EOF
             
@@ -119,4 +121,4 @@ jobs:
             echo "**************"
             pwd
             echo "*************"
-            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/kotdocker/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
+            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
