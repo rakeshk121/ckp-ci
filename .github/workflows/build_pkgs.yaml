@@ -110,9 +110,9 @@ jobs:
            cp -r config-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/* kubelet_${{ vars.VERSION }}-00_amd64
            ls kubelet_${{ vars.VERSION }}-00_amd64
            
-           cat <<EOF > kubelet_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           cat <<EOF > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/control
            Package: kubelet 
-           Version: ${{ env.VERSION }}-ckp
+           Version: ${{ vars.VERSION }}-ckp
            Maintainer: Coredge.io 
            Depends: libc6
            Architecture: amd64
@@ -136,9 +136,9 @@ jobs:
            cp -r config-repo/kubectl/$major_version/kubectl_${{ vars.VERSION }}/* kubectl_${{ vars.VERSION }}-00_amd64
            ls kubectl_${{ vars.VERSION }}-00_amd64
            
-           cat <<EOF> kubectl_${{ env.VERSION }}-00_amd64/DEBIAN/control
+           cat <<EOF> kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
            Package: kubectl
-           Version: ${{ env.VERSION }}-ckp
+           Version: ${{ vars.VERSION }}-ckp
            Architecture: amd64
            Maintainer: Coredge.io
            Installed-Size: 47585
