@@ -91,7 +91,7 @@ jobs:
           
            #Copy the config files lile control, service files
            major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
-           cp -r config-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }} kubeadm_${{ vars.VERSION }}-00_amd64
+           cp -r config-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/* kubeadm_${{ vars.VERSION }}-00_amd64
            ls kubeadm_${{ vars.VERSION }}-00_amd64
            
            cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control
