@@ -36,16 +36,9 @@ jobs:
         run: |
           echo "APT_VERSION=${{ env.APT_VERSION }}"
           echo "KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}"
-          echo "KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}"
+          echo "KUBE_GIT_MINOR+=${{ env.KUBE_GIT_MINOR }}"
           echo "RELEASE_VERSION=${{ env.RELEASE_VERSION }}"
 
-      - name: Print and Verify Env Variables
-        run: |
-          echo "${{ vars.VERSION }}"
-          echo "${{ vars.KUBE_GIT_MAJOR }}"
-          echo "${{ vars.KUBE_GIT_MINOR }}"
-          echo "${{ vars.KUBE_GIT_COMMIT }}"
-          echo "${{ vars.RELEASE_VERSION }}"
           
       # - name: Checkout
       #   uses: actions/checkout@v3
