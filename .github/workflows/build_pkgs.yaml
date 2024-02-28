@@ -177,7 +177,7 @@ jobs:
            docker_user: ${{secrets.DOCKER_USER}}
            DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE}}
            image_version: v${{ vars.VERSION }}-ckp
-           docker_image_version: v${{ vars.VERSION }}-rc1
+           docker_image_version: v${{ vars.VERSION }}${{ vars.IMAGE_RELEASE_TAG }}
         run: |
           docker login -u $docker_user -p $docker_pass
           cd _output/release-images/amd64
@@ -304,7 +304,7 @@ jobs:
             docker login -u $docker_user -p $docker_pass
             echo Pushing bundle "$*"
             echo $@
-            imgpkg push -f . -i docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
+            imgpkg push -f . -i docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}${{ vars.IMAGE_RELEASE_TAG }}
             echo Done
             EOF
             
@@ -312,4 +312,4 @@ jobs:
             echo "**************"
             pwd
             echo "*************"
-            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
+            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}${{ vars.IMAGE_RELEASE_TAG }}
