@@ -21,12 +21,12 @@ jobs:
       - name: Set Variables
         run: |
           # Extract major, minor, and patch versions
-          MAJOR=$(echo ${{ github.event.inputs.VERSION }} | cut -d'.' -f1)
-          MINOR=$(echo ${{ github.event.inputs.VERSION }} | cut -d'.' -f2)
-          PATCH=$(echo ${{ github.event.inputs.VERSION }} | cut -d'.' -f3)
+          MAJOR=$(echo ${{ vars.VERSION }} | cut -d'.' -f1)
+          MINOR=$(echo ${{ vars.VERSION }} | cut -d'.' -f2)
+          PATCH=$(echo ${{ vars.VERSION }} | cut -d'.' -f3)
 
           # Set variables
-          echo "VERSION=${{ github.event.inputs.VERSION }}" >> $GITHUB_ENV
+          echo "VERSION=${{ vars.VERSION }}" >> $GITHUB_ENV
           echo "APT_VERSION=${MAJOR}.${MINOR}" >> $GITHUB_ENV
           echo "KUBE_GIT_MAJOR=${MAJOR}" >> $GITHUB_ENV
           echo "KUBE_GIT_MINOR=${MINOR}" >> $GITHUB_ENV
@@ -47,289 +47,289 @@ jobs:
           echo "${{ vars.KUBE_GIT_COMMIT }}"
           echo "${{ vars.RELEASE_VERSION }}"
           
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-           repository: 'coredgeio/ckp'
-           ref: "${{ vars.KUBE_GIT_COMMIT }}"
-           token: ${{ secrets.GH_PAT }}
+      # - name: Checkout
+      #   uses: actions/checkout@v3
+      #   with:
+      #      repository: 'coredgeio/ckp'
+      #      ref: "${{ vars.KUBE_GIT_COMMIT }}"
+      #      token: ${{ secrets.GH_PAT }}
            
-      - name: Installing make dpkg dpkg-sig
-        run: sudo apt install make dpkg dpkg-sig -y
+      # - name: Installing make dpkg dpkg-sig
+      #   run: sudo apt install make dpkg dpkg-sig -y
 
-      - name: Build k8s core images and binaries
-        run:  |
-           rm -rf /tmp/ckp-deb/*
-           export KUBE_GIT_MAJOR=${{ vars.KUBE_GIT_MAJOR }}
-           export KUBE_GIT_COMMIT=${{ vars.KUBE_GIT_COMMIT }}
-           export KUBE_GIT_MINOR=${{ vars.KUBE_GIT_MINOR }}
-           export KUBE_GIT_VERSION="v${{ vars.VERSION }}-ckp"
-           export KUBE_GIT_TREE_STATE='clean'
-           echo v${{ vars.VERSION }}-ckp
-           make quick-release
-           ./_output/dockerized/bin/linux/amd64/kubeadm version
+      # - name: Build k8s core images and binaries
+      #   run:  |
+      #      rm -rf /tmp/ckp-deb/*
+      #      export KUBE_GIT_MAJOR=${{ vars.KUBE_GIT_MAJOR }}
+      #      export KUBE_GIT_COMMIT=${{ vars.KUBE_GIT_COMMIT }}
+      #      export KUBE_GIT_MINOR=${{ vars.KUBE_GIT_MINOR }}
+      #      export KUBE_GIT_VERSION="v${{ vars.VERSION }}-ckp"
+      #      export KUBE_GIT_TREE_STATE='clean'
+      #      echo v${{ vars.VERSION }}-ckp
+      #      make quick-release
+      #      ./_output/dockerized/bin/linux/amd64/kubeadm version
             
-      # - name: Clear the existing signature (in case of re-run)
-      #   shell: bash
-      #   run: | 
-      #     gpg --list-keys --no-tty
-      #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
-      #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
-      #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubectl
-      #     #added here
-      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-apiserver
-      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
-      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
-      #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
+      # # - name: Clear the existing signature (in case of re-run)
+      # #   shell: bash
+      # #   run: | 
+      # #     gpg --list-keys --no-tty
+      # #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubeadm 
+      # #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubelet 
+      # #     gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kubectl
+      # #     #added here
+      # #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-apiserver
+      # #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-proxy
+      # #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-controller-manager
+      # #     # gpg --pinentry-mode loopback --detach-sign _output/dockerized/bin/linux/amd64/kube-scheduler
 
 
-      - name: Checkout Repository for k8s core components configs
-        uses: actions/checkout@v2
-        with:
-          path: config-repo        
+      # - name: Checkout Repository for k8s core components configs
+      #   uses: actions/checkout@v2
+      #   with:
+      #     path: config-repo        
 
  
-      - name: Creating Kubeadm Deb packages
-        shell: bash
-        run: |
-           echo kubeadm_${{ vars.VERSION }}-00_amd64
-           #creating bin folder and copy the kubeadm binary
-           mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin 
-           cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/.
-           chmod +x kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/*
-           ls kubeadm_${{ vars.VERSION }}-00_amd64
+      # - name: Creating Kubeadm Deb packages
+      #   shell: bash
+      #   run: |
+      #      echo kubeadm_${{ vars.VERSION }}-00_amd64
+      #      #creating bin folder and copy the kubeadm binary
+      #      mkdir -p kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin 
+      #      cp _output/dockerized/bin/linux/amd64/kubeadm kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/.
+      #      chmod +x kubeadm_${{ vars.VERSION }}-00_amd64/usr/bin/*
+      #      ls kubeadm_${{ vars.VERSION }}-00_amd64
 
           
-           #Copy the config files lile control, service files
-           major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
-           cp -r config-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/* kubeadm_${{ vars.VERSION }}-00_amd64
-           ls kubeadm_${{ vars.VERSION }}-00_amd64
+      #      #Copy the config files lile control, service files
+      #      major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
+      #      cp -r config-repo/kubeadm/$major_version/kubeadm_${{ vars.VERSION }}/* kubeadm_${{ vars.VERSION }}-00_amd64
+      #      ls kubeadm_${{ vars.VERSION }}-00_amd64
            
-           cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control
-           Package: kubeadm
-           Version: ${{ vars.VERSION }}-ckp
-           Maintainer: Coredge.io 
-           Depends: libc6
-           Architecture: amd64
-           Description: kubeadm ckp binary installation 
-           EOF
+      #      cat <<EOF > kubeadm_${{ vars.VERSION }}-00_amd64/DEBIAN/control
+      #      Package: kubeadm
+      #      Version: ${{ vars.VERSION }}-ckp
+      #      Maintainer: Coredge.io 
+      #      Depends: libc6
+      #      Architecture: amd64
+      #      Description: kubeadm ckp binary installation 
+      #      EOF
 
-           dpkg --build kubeadm_${{ vars.VERSION }}-00_amd64
+      #      dpkg --build kubeadm_${{ vars.VERSION }}-00_amd64
 
       
-      - name: Creating Kubelet Deb packages
-        shell: bash
-        run: |
-           echo kubelet_${{ vars.VERSION }}-00_amd64
-           #creating bin folder and copy the kubelet binary
-           mkdir -p kubelet_${{ vars.VERSION }}-00_amd64/usr/bin 
-           cp _output/dockerized/bin/linux/amd64/kubelet kubelet_${{ vars.VERSION }}-00_amd64/usr/bin/.
-           chmod +x kubelet_${{ vars.VERSION }}-00_amd64/usr/bin/*
-           ls kubelet_${{ vars.VERSION }}-00_amd64
+      # - name: Creating Kubelet Deb packages
+      #   shell: bash
+      #   run: |
+      #      echo kubelet_${{ vars.VERSION }}-00_amd64
+      #      #creating bin folder and copy the kubelet binary
+      #      mkdir -p kubelet_${{ vars.VERSION }}-00_amd64/usr/bin 
+      #      cp _output/dockerized/bin/linux/amd64/kubelet kubelet_${{ vars.VERSION }}-00_amd64/usr/bin/.
+      #      chmod +x kubelet_${{ vars.VERSION }}-00_amd64/usr/bin/*
+      #      ls kubelet_${{ vars.VERSION }}-00_amd64
 
-           #Copy the config files lile control, service files
-           major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
-           cp -r config-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/* kubelet_${{ vars.VERSION }}-00_amd64
-           ls kubelet_${{ vars.VERSION }}-00_amd64
+      #      #Copy the config files lile control, service files
+      #      major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
+      #      cp -r config-repo/kubelet/$major_version/kubelet_${{ vars.VERSION }}/* kubelet_${{ vars.VERSION }}-00_amd64
+      #      ls kubelet_${{ vars.VERSION }}-00_amd64
            
-           cat <<EOF > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/control
-           Package: kubelet 
-           Version: ${{ vars.VERSION }}-ckp
-           Maintainer: Coredge.io 
-           Depends: libc6
-           Architecture: amd64
-           Description: kubelet ckp binary installation 
-           EOF
+      #      cat <<EOF > kubelet_${{ vars.VERSION }}-00_amd64/DEBIAN/control
+      #      Package: kubelet 
+      #      Version: ${{ vars.VERSION }}-ckp
+      #      Maintainer: Coredge.io 
+      #      Depends: libc6
+      #      Architecture: amd64
+      #      Description: kubelet ckp binary installation 
+      #      EOF
 
-           dpkg --build kubelet_${{ vars.VERSION }}-00_amd64
+      #      dpkg --build kubelet_${{ vars.VERSION }}-00_amd64
            
-      - name: Creating kubectl deb package
-        shell: bash
-        run: |
-           echo kubectl_${{ vars.VERSION }}-00_amd64
-           # Creating bin folder and copy the kubectl binary
-           mkdir -p kubectl_${{ vars.VERSION }}-00_amd64/usr/bin 
-           cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/.
-           chmod +x kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/*
-           ls kubectl_${{ vars.VERSION }}-00_amd64
+      # - name: Creating kubectl deb package
+      #   shell: bash
+      #   run: |
+      #      echo kubectl_${{ vars.VERSION }}-00_amd64
+      #      # Creating bin folder and copy the kubectl binary
+      #      mkdir -p kubectl_${{ vars.VERSION }}-00_amd64/usr/bin 
+      #      cp _output/dockerized/bin/linux/amd64/kubectl kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/.
+      #      chmod +x kubectl_${{ vars.VERSION }}-00_amd64/usr/bin/*
+      #      ls kubectl_${{ vars.VERSION }}-00_amd64
 
-           # Copy the config files lile control, service files
-           major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
-           cp -r config-repo/kubectl/$major_version/kubectl_${{ vars.VERSION }}/* kubectl_${{ vars.VERSION }}-00_amd64
-           ls kubectl_${{ vars.VERSION }}-00_amd64
+      #      # Copy the config files lile control, service files
+      #      major_version=$(echo ${{ vars.VERSION }} | cut -d. -f1,2)
+      #      cp -r config-repo/kubectl/$major_version/kubectl_${{ vars.VERSION }}/* kubectl_${{ vars.VERSION }}-00_amd64
+      #      ls kubectl_${{ vars.VERSION }}-00_amd64
            
-           cat <<EOF> kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
-           Package: kubectl
-           Version: ${{ vars.VERSION }}-ckp
-           Architecture: amd64
-           Maintainer: Coredge.io
-           Installed-Size: 47585
-           Section: misc
-           Priority: optional
-           Description: CKP Command Line Tool
-           EOF
+      #      cat <<EOF> kubectl_${{ vars.VERSION }}-00_amd64/DEBIAN/control
+      #      Package: kubectl
+      #      Version: ${{ vars.VERSION }}-ckp
+      #      Architecture: amd64
+      #      Maintainer: Coredge.io
+      #      Installed-Size: 47585
+      #      Section: misc
+      #      Priority: optional
+      #      Description: CKP Command Line Tool
+      #      EOF
 
-           dpkg --build kubectl_${{ vars.VERSION }}-00_amd64
+      #      dpkg --build kubectl_${{ vars.VERSION }}-00_amd64
 
-      - name: Signing deb packages
-        shell: bash
-        run: |
-          # Removing if any existing signatures
-          ar d "kubeadm_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
-          ar d "kubelet_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
-          ar d "kubectl_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
+      # - name: Signing deb packages
+      #   shell: bash
+      #   run: |
+      #     # Removing if any existing signatures
+      #     ar d "kubeadm_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
+      #     ar d "kubelet_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
+      #     ar d "kubectl_${{ vars.VERSION }}-00_amd64.deb" _gpgbuilder
           
-          # Signing the debian packages
-          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubeadm_${{ vars.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ vars.VERSION }}-00_amd64.deb
-          dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ vars.VERSION }}-00_amd64.deb
+      #     # Signing the debian packages
+      #     dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubeadm_${{ vars.VERSION }}-00_amd64.deb
+      #     dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubelet_${{ vars.VERSION }}-00_amd64.deb
+      #     dpkg-sig -k coredgeio --sign builder  --gpg-options "--pinentry-mode loopback" kubectl_${{ vars.VERSION }}-00_amd64.deb
 
-          # Move the pacakges to common folder
-          mkdir -p /tmp/ckp-deb
-          cp kubeadm_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
-          cp kubelet_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
-          cp kubectl_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
+      #     # Move the pacakges to common folder
+      #     mkdir -p /tmp/ckp-deb
+      #     cp kubeadm_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
+      #     cp kubelet_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
+      #     cp kubectl_${{ vars.VERSION }}-00_amd64.deb /tmp/ckp-deb
       
-      - name: Pushing k8s core components Docker images to Dockerhub
-        shell: bash
-        env: 
-           docker_pass: ${{secrets.DOCKER_PASSWORD}}
-           docker_user: ${{secrets.DOCKER_USER}}
-           DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE}}
-           image_version: v${{ vars.VERSION }}-ckp
-           docker_image_version: v${{ vars.VERSION }}-rc1
-        run: |
-          docker login -u $docker_user -p $docker_pass
-          cd _output/release-images/amd64
-          docker load -i kube-scheduler.tar
-          docker load -i kube-proxy.tar
-          docker load -i kube-controller-manager.tar
-          docker load -i kube-apiserver.tar
+      # - name: Pushing k8s core components Docker images to Dockerhub
+      #   shell: bash
+      #   env: 
+      #      docker_pass: ${{secrets.DOCKER_PASSWORD}}
+      #      docker_user: ${{secrets.DOCKER_USER}}
+      #      DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE}}
+      #      image_version: v${{ vars.VERSION }}-ckp
+      #      docker_image_version: v${{ vars.VERSION }}-rc1
+      #   run: |
+      #     docker login -u $docker_user -p $docker_pass
+      #     cd _output/release-images/amd64
+      #     docker load -i kube-scheduler.tar
+      #     docker load -i kube-proxy.tar
+      #     docker load -i kube-controller-manager.tar
+      #     docker load -i kube-apiserver.tar
 
-          docker tag registry.k8s.io/kube-apiserver-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
-          docker tag registry.k8s.io/kube-proxy-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
-          docker tag registry.k8s.io/kube-scheduler-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
-          docker tag registry.k8s.io/kube-controller-manager-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version
+      #     docker tag registry.k8s.io/kube-apiserver-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
+      #     docker tag registry.k8s.io/kube-proxy-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
+      #     docker tag registry.k8s.io/kube-scheduler-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
+      #     docker tag registry.k8s.io/kube-controller-manager-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version
           
-          export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE
-          docker push ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
-          docker push ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
-          docker push ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
-          docker push ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version 
+      #     export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE
+      #     docker push ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
+      #     docker push ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
+      #     docker push ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
+      #     docker push ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version 
     
 
-      - name: Checkout the vmware-tanzu/cluster-api-provider-bringyourownhost
-        uses: actions/checkout@v3
-        with:
-           repository: 'vmware-tanzu/cluster-api-provider-bringyourownhost'
-           ref: 'main'
-           path: byoh-repo  
+      # - name: Checkout the vmware-tanzu/cluster-api-provider-bringyourownhost
+      #   uses: actions/checkout@v3
+      #   with:
+      #      repository: 'vmware-tanzu/cluster-api-provider-bringyourownhost'
+      #      ref: 'main'
+      #      path: byoh-repo  
 
-      - name: Downloading required packages
-        run: | 
-            cd byoh-repo/installer/bundle_builder/ingredients/deb/
-            rm -f Dockerfile download.sh
+      # - name: Downloading required packages
+      #   run: | 
+      #       cd byoh-repo/installer/bundle_builder/ingredients/deb/
+      #       rm -f Dockerfile download.sh
 
-            #Create download.sh with script to install required packages 
-            touch download.sh
-            cat <<EOF > download.sh
-            #!/bin/bash
-            set -e
-            echo  Update the apt package index and install packages needed to use the Kubernetes apt repository
-            sudo apt-get update
-            sudo apt-get install -y apt-transport-https ca-certificates curl
-            echo "Download Containerd"
-            curl -LOJR https://github.com/containerd/containerd/releases/download/v1.6.18/cri-containerd-cni-1.6.18-linux-amd64.tar.gz
-            echo Download the Google Cloud public signing key
-            sudo apt-get install gpg -y
+      #       #Create download.sh with script to install required packages 
+      #       touch download.sh
+      #       cat <<EOF > download.sh
+      #       #!/bin/bash
+      #       set -e
+      #       echo  Update the apt package index and install packages needed to use the Kubernetes apt repository
+      #       sudo apt-get update
+      #       sudo apt-get install -y apt-transport-https ca-certificates curl
+      #       echo "Download Containerd"
+      #       curl -LOJR https://github.com/containerd/containerd/releases/download/v1.6.18/cri-containerd-cni-1.6.18-linux-amd64.tar.gz
+      #       echo Download the Google Cloud public signing key
+      #       sudo apt-get install gpg -y
 
-            sudo apt-get update
-            sudo apt-get install wget -y 
-            echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${{vars.apt_version}}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+      #       sudo apt-get update
+      #       sudo apt-get install wget -y 
+      #       echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${{vars.apt_version}}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
             
-            sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://pkgs.k8s.io/core:/stable:/v${{vars.apt_version}}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      #       sudo mkdir -p /etc/apt/keyrings
+      #       curl -fsSL https://pkgs.k8s.io/core:/stable:/v${{vars.apt_version}}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-            echo Update apt package index, install kubelet, kubeadm and kubectl
-            sudo apt-get update
-            sudo apt-get download kubernetes-cni:$ARCH=1.2.0-2.1
-            sudo apt-get download cri-tools:$ARCH=1.27.1-1.1
-            EOF
+      #       echo Update apt package index, install kubelet, kubeadm and kubectl
+      #       sudo apt-get update
+      #       sudo apt-get download kubernetes-cni:$ARCH=1.2.0-2.1
+      #       sudo apt-get download cri-tools:$ARCH=1.27.1-1.1
+      #       EOF
             
-            #Create Dockerfile which the download.sh created above
-            touch Dockerfile
-            cat <<EOF > Dockerfile
-            FROM ubuntu:20.04 as build
-            ENV CONTAINERD_VERSION=1.6.18
-            ENV KUBERNETES_VERSION=${{vars.VERSION}}-00
-            ENV ARCH=amd64
-            RUN apt-get update \
-                && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo
-            WORKDIR /bundle-builder
-            COPY download.sh .
-            RUN chmod a+x download.sh
-            WORKDIR /ingredients
-            ENTRYPOINT ["/bundle-builder/download.sh"]
-            EOF
+      #       #Create Dockerfile which the download.sh created above
+      #       touch Dockerfile
+      #       cat <<EOF > Dockerfile
+      #       FROM ubuntu:20.04 as build
+      #       ENV CONTAINERD_VERSION=1.6.18
+      #       ENV KUBERNETES_VERSION=${{vars.VERSION}}-00
+      #       ENV ARCH=amd64
+      #       RUN apt-get update \
+      #           && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo
+      #       WORKDIR /bundle-builder
+      #       COPY download.sh .
+      #       RUN chmod a+x download.sh
+      #       WORKDIR /ingredients
+      #       ENTRYPOINT ["/bundle-builder/download.sh"]
+      #       EOF
 
-            # Build the docker file to create byoh bundle
-            docker build -t byoh-ingredients-deb .
-            mkdir -p byoh-ingredients-download
-            chmod 777 byoh-ingredients-download
-            docker run --rm -v `pwd`/byoh-ingredients-download:/ingredients byoh-ingredients-deb
+      #       # Build the docker file to create byoh bundle
+      #       docker build -t byoh-ingredients-deb .
+      #       mkdir -p byoh-ingredients-download
+      #       chmod 777 byoh-ingredients-download
+      #       docker run --rm -v `pwd`/byoh-ingredients-download:/ingredients byoh-ingredients-deb
 
-      - name: Moving custom deb packages
-        shell: bash
-        run: |
-            pwd
-            cd byoh-repo/installer/bundle_builder/ingredients/deb/byoh-ingredients-download/
-            rm -rf kubelet_${{vars.VERSION}}-00_amd64.deb kubeadm_${{vars.VERSION}}-00_amd64.deb kubectl_${{vars.VERSION}}-00_amd64.deb
-            cp /tmp/ckp-deb/kubelet_${{vars.VERSION}}-00_amd64.deb .
-            cp /tmp/ckp-deb/kubeadm_${{vars.VERSION}}-00_amd64.deb .
-            cp /tmp/ckp-deb/kubectl_${{vars.VERSION}}-00_amd64.deb .
+      # - name: Moving custom deb packages
+      #   shell: bash
+      #   run: |
+      #       pwd
+      #       cd byoh-repo/installer/bundle_builder/ingredients/deb/byoh-ingredients-download/
+      #       rm -rf kubelet_${{vars.VERSION}}-00_amd64.deb kubeadm_${{vars.VERSION}}-00_amd64.deb kubectl_${{vars.VERSION}}-00_amd64.deb
+      #       cp /tmp/ckp-deb/kubelet_${{vars.VERSION}}-00_amd64.deb .
+      #       cp /tmp/ckp-deb/kubeadm_${{vars.VERSION}}-00_amd64.deb .
+      #       cp /tmp/ckp-deb/kubectl_${{vars.VERSION}}-00_amd64.deb .
 
-      - name: Pushing bundles
-        shell: bash
-        env: 
-           docker_pass: ${{ secrets.DOCKER_PASSWORD }}
-           docker_user: ${{ secrets.DOCKER_USER }}
-        run: |
-            pwd
-            cd byoh-repo/installer/bundle_builder
-            rm -rf push-bundle.sh
-            rm -rf Dockerfile
+      # - name: Pushing bundles
+      #   shell: bash
+      #   env: 
+      #      docker_pass: ${{ secrets.DOCKER_PASSWORD }}
+      #      docker_user: ${{ secrets.DOCKER_USER }}
+      #   run: |
+      #       pwd
+      #       cd byoh-repo/installer/bundle_builder
+      #       rm -rf push-bundle.sh
+      #       rm -rf Dockerfile
 
-            cat <<EOF > Dockerfile
-            FROM ubuntu:20.04
-            ENV BUILD_ONLY=1
-            WORKDIR /bundle-builder
-            COPY *.sh ./
-            RUN apt-get update
-            RUN apt  install -y curl docker.io
-            RUN chmod a+x *.sh
-            COPY config/ubuntu/20_04/k8s/1_22 /config/
-            RUN mkdir /ingredients && mkdir /bundle
-            ENV PATH="/bundle-builder:${PATH}"
-            WORKDIR /tmp/bundle
-            ENTRYPOINT ["build-push-bundle.sh", "/ingredients", "/config"]
-            EOF
+      #       cat <<EOF > Dockerfile
+      #       FROM ubuntu:20.04
+      #       ENV BUILD_ONLY=1
+      #       WORKDIR /bundle-builder
+      #       COPY *.sh ./
+      #       RUN apt-get update
+      #       RUN apt  install -y curl docker.io
+      #       RUN chmod a+x *.sh
+      #       COPY config/ubuntu/20_04/k8s/1_22 /config/
+      #       RUN mkdir /ingredients && mkdir /bundle
+      #       ENV PATH="/bundle-builder:${PATH}"
+      #       WORKDIR /tmp/bundle
+      #       ENTRYPOINT ["build-push-bundle.sh", "/ingredients", "/config"]
+      #       EOF
             
-            cat <<EOF > push-bundle.sh
-            #!/bin/bash
-            set -e
-            mkdir local-bin/
-            curl -L https://carvel.dev/install.sh | K14SIO_INSTALL_BIN_DIR=local-bin bash
-            export PATH=$PWD/local-bin/:$PATH
-            cp local-bin/* /usr/bin/
-            docker login -u $docker_user -p $docker_pass
-            echo Pushing bundle "$*"
-            echo $@
-            imgpkg push -f . -i docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
-            echo Done
-            EOF
+      #       cat <<EOF > push-bundle.sh
+      #       #!/bin/bash
+      #       set -e
+      #       mkdir local-bin/
+      #       curl -L https://carvel.dev/install.sh | K14SIO_INSTALL_BIN_DIR=local-bin bash
+      #       export PATH=$PWD/local-bin/:$PATH
+      #       cp local-bin/* /usr/bin/
+      #       docker login -u $docker_user -p $docker_pass
+      #       echo Pushing bundle "$*"
+      #       echo $@
+      #       imgpkg push -f . -i docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
+      #       echo Done
+      #       EOF
             
-            docker build -t byoh-build-push-bundle .
-            echo "**************"
-            pwd
-            echo "*************"
-            docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
+      #       docker build -t byoh-build-push-bundle .
+      #       echo "**************"
+      #       pwd
+      #       echo "*************"
+      #       docker run --rm -v `pwd`/ingredients/deb/byoh-ingredients-download:/ingredients --env BUILD_ONLY=0 byoh-build-push-bundle docker.io/${{ vars.DOCKER_REGISTRY }}/byoh-bundle-ubuntu_20.04.1_x86-64_k8s:v${{vars.VERSION}}
