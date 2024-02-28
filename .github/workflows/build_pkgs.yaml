@@ -29,14 +29,14 @@ jobs:
           echo "VERSION=${{ vars.VERSION }}" >> $GITHUB_ENV
           echo "APT_VERSION=${MAJOR}.${MINOR}" >> $GITHUB_ENV
           echo "KUBE_GIT_MAJOR=${MAJOR}" >> $GITHUB_ENV
-          echo "KUBE_GIT_MINOR=${MINOR}" >> $GITHUB_ENV
+          echo "KUBE_GIT_MINOR=${MINOR}+" >> $GITHUB_ENV
           echo "RELEASE_VERSION=release-${MAJOR}.${MINOR}" >> $GITHUB_ENV
 
       - name: Show Variables
         run: |
           echo "APT_VERSION=${{ env.APT_VERSION }}"
           echo "KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}"
-          echo "KUBE_GIT_MINOR+=${{ env.KUBE_GIT_MINOR }}"
+          echo "KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}"
           echo "RELEASE_VERSION=${{ env.RELEASE_VERSION }}"
 
           
