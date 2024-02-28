@@ -2,6 +2,7 @@
 # Building and Signing of Binaries: KUBEADM, KUBELET and KUBECTL
 # Building and Signing of Docker images of Core-components
 # Creating deb packages of KUBEADM, KUBELET and KUBECTL
+# Creating byoh bundle and pushing into registry 
 
 #1.26.10 - b8609d4dd75c5d6fba4a5eaa63a5507cb39a6e99
 #1.27.6 - 741c8db18a52787d734cbe4795f0b4ad860906d6
@@ -17,6 +18,27 @@ jobs:
       - self-hosted
     name: clone and create deb
     steps:    
+      - name: Set Variables
+        run: |
+          # Extract major, minor, and patch versions
+          MAJOR=$(echo ${{ github.event.inputs.VERSION }} | cut -d'.' -f1)
+          MINOR=$(echo ${{ github.event.inputs.VERSION }} | cut -d'.' -f2)
+          PATCH=$(echo ${{ github.event.inputs.VERSION }} | cut -d'.' -f3)
+
+          # Set variables
+          echo "VERSION=${{ github.event.inputs.VERSION }}" >> $GITHUB_ENV
+          echo "APT_VERSION=${MAJOR}.${MINOR}" >> $GITHUB_ENV
+          echo "KUBE_GIT_MAJOR=${MAJOR}" >> $GITHUB_ENV
+          echo "KUBE_GIT_MINOR=${MINOR}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=release-${MAJOR}.${MINOR}" >> $GITHUB_ENV
+
+      - name: Show Variables
+        run: |
+          echo "APT_VERSION=${{ env.APT_VERSION }}"
+          echo "KUBE_GIT_MAJOR=${{ env.KUBE_GIT_MAJOR }}"
+          echo "KUBE_GIT_MINOR=${{ env.KUBE_GIT_MINOR }}"
+          echo "RELEASE_VERSION=${{ env.RELEASE_VERSION }}"
+
       - name: Print and Verify Env Variables
         run: |
           echo "${{ vars.VERSION }}"
