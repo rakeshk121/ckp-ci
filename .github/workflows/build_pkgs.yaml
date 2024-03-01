@@ -180,11 +180,24 @@ jobs:
            docker_image_version: v${{ vars.VERSION }}${{ vars.IMAGE_RELEASE_TAG }}
         run: |
           docker login -u $docker_user -p $docker_pass
-          cd _output/release-images/amd64
-          docker load -i kube-scheduler.tar
-          docker load -i kube-proxy.tar
-          docker load -i kube-controller-manager.tar
-          docker load -i kube-apiserver.tar
+          docker load -i _output/release-images/amd64/kube-scheduler.tar
+          docker load -i _output/release-images/amd64/kube-proxy.tar
+          docker load -i _output/release-images/amd64/kube-controller-manager.tar
+          docker load -i _output/release-images/amd64/kube-apiserver.tar
+
+          ./_output/dockerized/bin/linux/amd64/kubeadm config images list    
+          # Get the list of images from kubeadm config
+          images_list=$(./_output/dockerized/bin/linux/amd64/kubeadm config images list)
+
+          # Extract image names for pause, etcd, and coredns
+          pause_image=$(echo "$images_list" | grep "registry.k8s.io/pause" | awk '{print $1}')
+          etcd_image=$(echo "$images_list" | grep "registry.k8s.io/etcd" | awk '{print $1}')
+          coredns_image=$(echo "$images_list" | grep "registry.k8s.io/coredns/coredns" | awk '{print $1}')
+
+          # Retag and push the images
+          docker tag "$pause_image" "${{ vars.DOCKER_REGISTRY }}/$(basename "$pause_image")"
+          docker tag "$etcd_image" "${{ vars.DOCKER_REGISTRY }}/$(basename "$etcd_image")"
+          docker tag "$coredns_image" "${{ vars.DOCKER_REGISTRY }}/$(basename "$coredns_image")
 
           docker tag registry.k8s.io/kube-apiserver-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-apiserver:$docker_image_version
           docker tag registry.k8s.io/kube-proxy-amd64:$image_version ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
@@ -196,6 +209,10 @@ jobs:
           docker push ${{ vars.DOCKER_REGISTRY }}/kube-proxy:$docker_image_version
           docker push ${{ vars.DOCKER_REGISTRY }}/kube-scheduler:$docker_image_version
           docker push ${{ vars.DOCKER_REGISTRY }}/kube-controller-manager:$docker_image_version 
+
+          docker push "${{ vars.DOCKER_REGISTRY }}/$(basename "$pause_image")"
+          docker push "${{ vars.DOCKER_REGISTRY }}/$(basename "$etcd_image")"
+          docker push "${{ vars.DOCKER_REGISTRY }}/$(basename "$coredns_image")"          
     
 
       - name: Checkout the vmware-tanzu/cluster-api-provider-bringyourownhost
