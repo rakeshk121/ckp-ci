@@ -1,0 +1,44 @@
+name: build_pkgs_images
+on: [ workflow_dispatch ]
+jobs:
+  script:
+    runs-on:
+      - self-hosted
+    name: Create k8s cluster
+    steps: 
+    - name: Create Inventory file in Deployment Node
+      run: |
+        ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        cd ansible_playbook_kubernetes
+        echo "[all:vars]" > $cluster_name
+        echo "selected_os=$OS_NAME" >> $cluster_name
+        echo "k8s_version=$k8s_version" >> $cluster_name
+        echo "selected_cni=$k8s_cni" >> $cluster_name
+        echo "cni_version=$k8s_cni_version" >> $cluster_name
+        echo "pod_network_cidr=$pod_network_cidr" >> $cluster_name
+        echo "vip=$vip" >> $cluster_name
+        echo "network_interface=$network_interface_vip" >> $cluster_name
+        echo "kube_vip_version=$kube_vip_version" >> $cluster_name
+        echo "schedule_workload_to_master=$schedule_workload_to_master" >> $cluster_name
+        echo "ckp_distro=$ckp_distro" >> $cluster_name
+        echo "[masters]" >> $cluster_name
+        echo "$k8s_masters_ip" | tr ',' '\n' >> $cluster_name
+        echo "[workers]" >> $cluster_name
+        echo "$k8s_worker_ip" | tr ',' '\n' >> $cluster_name
+        scp -o StrictHostKeyChecking=no -r -i $ssh_key k8s-multi-node-ansible $k8s_deployment_user@${k8s_deployment_ip}:/home/${k8s_deployment_user}
+        scp -o StrictHostKeyChecking=no -i $ssh_key $cluster_name $k8s_deployment_user@${k8s_deployment_ip}:/home/${k8s_deployment_user}/k8s-multi-node-ansible/inventory.ini
+    
+    - name: Install Ansible if not available
+      run: |
+        ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        ssh -o StrictHostKeyChecking=no -i $ssh_key $k8s_deployment_user@$k8s_deployment_ip 'if [ -f /etc/os-release ]; then source /etc/os-release; if [[ "$ID" == "ubuntu" ]]; then sudo apt-get update && sudo apt-get install -y ansible; elif [[ "$ID" == "rocky" ]]; then sudo dnf install -y epel-release && sudo dnf install -y ansible; else echo "Unsupported OS: $ID"; fi; else echo "Unable to determine the OS"; fi'
+    
+    - name: Execute k8s cluster creation playbook
+      run: |
+        ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        cd ansible_playbook_kubernetes/k8s-multi-node-ansible/
+        export k8s_deployment_user1=$k8s_deployment_user
+        echo "#!/bin/bash\ncd /home/${k8s_deployment_user1}/k8s-multi-node-ansible/\nANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i  /home/${k8s_deployment_user1}/k8s-multi-node-ansible/inventory.ini  /home/${k8s_deployment_user1}/k8s-multi-node-ansible/playbooks/k8s-all.yaml  -v" > test.sh
+        chmod 700  test.sh
+        scp -o StrictHostKeyChecking=no -p -i $ssh_key test.sh $k8s_deployment_user@${k8s_deployment_ip}:/home/${k8s_deployment_user1}/k8s-multi-node-ansible/test.sh 
+        ssh -o StrictHostKeyChecking=no -i  $ssh_key $k8s_deployment_user@${k8s_deployment_ip} /home/${k8s_deployment_user1}/k8s-multi-node-ansible/test.sh    
