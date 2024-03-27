@@ -16,6 +16,7 @@ jobs:
     - name: Create Inventory file in Deployment Node
       run: |
         ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        cluster_name="test"
         cd devops-repo/k8s-multi-node-ansible/ansible-playbooks
         echo "[all:vars]" > $cluster_name
         echo "selected_os=$OS_NAME" >> $cluster_name
