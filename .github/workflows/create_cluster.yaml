@@ -11,11 +11,12 @@ jobs:
       with:
          repository: 'coredgeio/devops'
          token: ${{ secrets.GH_PAT }}
+         path: devops-repo          
            
     - name: Create Inventory file in Deployment Node
       run: |
         ssh_key="/var/jenkins_home/.ssh/id_rsa"
-        cd devops/k8s-multi-node-ansible/ansible-playbooks
+        cd devops-repo/k8s-multi-node-ansible/ansible-playbooks
         echo "[all:vars]" > $cluster_name
         echo "selected_os=$OS_NAME" >> $cluster_name
         echo "k8s_version=$k8s_version" >> $cluster_name
