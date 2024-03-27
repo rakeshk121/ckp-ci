@@ -1,4 +1,4 @@
-name: build_pkgs_images
+name: create_cluster
 on: [ workflow_dispatch ]
 jobs:
   script:
