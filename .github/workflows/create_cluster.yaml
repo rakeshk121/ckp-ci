@@ -15,7 +15,7 @@ jobs:
            
     - name: Create Inventory file in Deployment Node
       run: |
-        ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        ssh_key="~/.ssh/id_rsa"
         cluster_name="test"
         cd devops-repo/k8s-multi-node-ansible/ansible-playbooks
         echo "[all:vars]" > $cluster_name
@@ -38,12 +38,12 @@ jobs:
     
     - name: Install Ansible if not available
       run: |
-        ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        ssh_key="~/.ssh/id_rsa"
         ssh -o StrictHostKeyChecking=no -i $ssh_key $k8s_deployment_user@$k8s_deployment_ip 'if [ -f /etc/os-release ]; then source /etc/os-release; if [[ "$ID" == "ubuntu" ]]; then sudo apt-get update && sudo apt-get install -y ansible; elif [[ "$ID" == "rocky" ]]; then sudo dnf install -y epel-release && sudo dnf install -y ansible; else echo "Unsupported OS: $ID"; fi; else echo "Unable to determine the OS"; fi'
     
     - name: Execute k8s cluster creation playbook
       run: |
-        ssh_key="/var/jenkins_home/.ssh/id_rsa"
+        ssh_key="~/.ssh/id_rsa"
         cd ansible_playbook_kubernetes/k8s-multi-node-ansible/
         export k8s_deployment_user1=$k8s_deployment_user
         echo "#!/bin/bash\ncd /home/${k8s_deployment_user1}/k8s-multi-node-ansible/\nANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i  /home/${k8s_deployment_user1}/k8s-multi-node-ansible/inventory.ini  /home/${k8s_deployment_user1}/k8s-multi-node-ansible/playbooks/k8s-all.yaml  -v" > test.sh
